@@ -86,8 +86,46 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MRF.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icons\add_database_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\add_folder_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\add_link_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\briefcase_1.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\create_new_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\engineering_1.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\file_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\information_1.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\live_folder_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\monitor_1.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\save_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

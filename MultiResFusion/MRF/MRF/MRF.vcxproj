@@ -19,6 +19,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -150,9 +151,23 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="tools.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="MRF.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icons\add_database_2.svg" />
+    <None Include="Resources\icons\add_folder_2.svg" />
+    <None Include="Resources\icons\add_link_2.svg" />
+    <None Include="Resources\icons\briefcase_1.svg" />
+    <None Include="Resources\icons\create_new_2.svg" />
+    <None Include="Resources\icons\engineering_1.svg" />
+    <None Include="Resources\icons\file_2.svg" />
+    <None Include="Resources\icons\information_1.svg" />
+    <None Include="Resources\icons\live_folder_2.svg" />
+    <None Include="Resources\icons\monitor_1.svg" />
+    <None Include="Resources\icons\save_2.svg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
