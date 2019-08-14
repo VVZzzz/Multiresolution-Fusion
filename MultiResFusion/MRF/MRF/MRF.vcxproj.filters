@@ -34,6 +34,15 @@
     <Filter Include="Source Files\Ribbon">
       <UniqueIdentifier>{567fba8a-6ef1-457c-83ff-f7d7177a94ca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Reconstruct">
+      <UniqueIdentifier>{5a1384ff-a255-4eaf-873e-a5371efe71db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Reconstruct">
+      <UniqueIdentifier>{6e215820-5c24-4179-872d-e9531795b13e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{6f44d64b-e272-4f52-a3c2-fd3931abdc70}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -88,6 +97,21 @@
     </ClInclude>
     <ClInclude Include="tools.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ribbonbuttongroup.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ribbontabcontent.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Annealing.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </ClInclude>
+    <ClInclude Include="pic.h">
+      <Filter>Header Files\util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

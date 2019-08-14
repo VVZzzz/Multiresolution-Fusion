@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>150</width>
-    <height>37</height>
+    <width>380</width>
+    <height>216</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,6 +29,25 @@
    <property name="spacing">
     <number>0</number>
    </property>
+   <item row="0" column="1">
+    <widget class="Line" name="verticalLine">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #c0c0c0;</string>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Plain</enum>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <layout class="QVBoxLayout" name="verticalLayout">
      <property name="spacing">
@@ -55,6 +74,12 @@
      </item>
      <item>
       <widget class="Line" name="horizontalLine">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="styleSheet">
         <string notr="true">color: #c0c0c0;</string>
        </property>
@@ -77,19 +102,6 @@
       </widget>
      </item>
     </layout>
-   </item>
-   <item row="0" column="1">
-    <widget class="Line" name="verticalLine">
-     <property name="styleSheet">
-      <string notr="true">color: #c0c0c0;</string>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Plain</enum>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-    </widget>
    </item>
   </layout>
  </widget>

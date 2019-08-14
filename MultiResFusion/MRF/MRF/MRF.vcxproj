@@ -150,6 +150,11 @@
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Annealing.h" />
+    <ClInclude Include="GeneratedFiles\ui_MainWindow.h" />
+    <ClInclude Include="GeneratedFiles\ui_ribbonbuttongroup.h" />
+    <ClInclude Include="GeneratedFiles\ui_ribbontabcontent.h" />
+    <ClInclude Include="pic.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="tools.h" />
   </ItemGroup>
