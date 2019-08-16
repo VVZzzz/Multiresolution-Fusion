@@ -70,6 +70,9 @@
           <property name="verticalScrollBarPolicy">
            <enum>Qt::ScrollBarAlwaysOn</enum>
           </property>
+          <property name="horizontalScrollBarPolicy">
+           <enum>Qt::ScrollBarAlwaysOn</enum>
+          </property>
           <property name="sizeAdjustPolicy">
            <enum>QAbstractScrollArea::AdjustToContents</enum>
           </property>
@@ -82,10 +85,19 @@
           <property name="dragDropMode">
            <enum>QAbstractItemView::DragDrop</enum>
           </property>
+          <property name="movement">
+           <enum>QListView::Snap</enum>
+          </property>
+          <property name="resizeMode">
+           <enum>QListView::Adjust</enum>
+          </property>
          </widget>
         </item>
         <item>
-         <widget class="QGraphicsView" name="graphicsView">
+         <widget class="MyGraphicsView" name="graphicsView">
+          <property name="contextMenuPolicy">
+           <enum>Qt::CustomContextMenu</enum>
+          </property>
           <property name="verticalScrollBarPolicy">
            <enum>Qt::ScrollBarAsNeeded</enum>
           </property>
@@ -174,6 +186,11 @@
    <extends>QTabWidget</extends>
    <header location="global">ribbon.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>MyGraphicsView</class>
+   <extends>QGraphicsView</extends>
+   <header location="global">MyGraphicsView.h</header>
   </customwidget>
  </customwidgets>
  <resources>

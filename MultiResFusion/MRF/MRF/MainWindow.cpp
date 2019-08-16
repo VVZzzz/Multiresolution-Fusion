@@ -9,7 +9,21 @@ MainWindow::MainWindow(QWidget *parent)
   initToolButtons();
 
   ui->setupUi(this);    
+  //连接信号和槽
+  connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this,
+          SLOT(listItem_clicked(QListWidgetItem *)));
 
+  //初始化状态栏
+  m_sizeLabel = new QLabel(this);
+  ui->statusBar->addPermanentWidget(m_sizeLabel);
+
+  //设置窗口标题
+  this->setWindowTitle(TR("多分辨率融合软件"));
+
+  //设置"场景"
+  m_graphScene = new QGraphicsScene(this);
+  m_graphScene->setBackgroundBrush(QColor::fromRgb(224, 224, 224));
+  ui->graphicsView->setScene(m_graphScene);
 
   //隐藏ribbon dock bar
   ui->ribbonDockWidget->setTitleBarWidget(new QWidget());
@@ -124,23 +138,18 @@ void MainWindow::initToolButtons() {
 
 void MainWindow::initListWidget() {
   //ui->listWidget->setWindowTitle(TR("图片列表"));
-  ui->listWidget->resize(365, 400);
+  //ui->listWidget->resize(300, 400);
   //设置QListWidget的显示模式
   ui->listWidget->setViewMode(QListView::IconMode);
   //设置QListWidget中单元项的图片大小
-  ui->listWidget->setIconSize(QSize(100, 100));
+  ui->listWidget->setIconSize(QSize(100, 80));
   //设置QListWidget中单元项的间距
   ui->listWidget->setSpacing(10);
   //设置自动适应布局调整（Adjust适应，Fixed不适应），默认不适应
   ui->listWidget->setResizeMode(QListWidget::Adjust);
   //设置不能移动
-  ui->listWidget->setMovement(QListWidget::Static);
+  ui->listWidget->setMovement(QListWidget::Snap);
 
-  //QListWidgetItem *listTitle = new QListWidgetItem(ui->listWidget);
-  //listTitle->setIcon(QIcon());
-  //listTitle->setText(TR("图片列表"));
-
-  //ui->listWidget->addItem(listTitle);
   ui->listWidget->addItem(TR("图片列表"));
   ui->listWidget->show();
 
@@ -162,6 +171,128 @@ void MainWindow::enableFileButtons() {
   m_threedim_3->setEnabled(true);
 }
 
+void MainWindow::clearView() { 
+  m_graphScene->clear(); 
+  ui->graphicsView->resetTransform();
+  m_sizeLabel->clear();
+}
+
+void MainWindow::clearListWidget() { 
+  ui->listWidget->clear(); 
+  ui->listWidget->addItem(TR("图片列表"));
+}
+
+void MainWindow::addImage2View(const QString &filepath) {
+  m_pixmap = QPixmap(filepath);
+  m_graphScene->addPixmap(m_pixmap);
+  m_graphScene->setSceneRect(QRectF(m_pixmap.rect()));
+  setWindowTitle(QFileInfo(filepath).fileName() + "-" + TR("多分辨率融合软件"));
+  m_sizeLabel->setText(QString::number(m_pixmap.width()) + "*" +
+                       QString::number(m_pixmap.width()));
+}
+
+void MainWindow::addImage2List(const QString &filepath) {
+  QListWidgetItem *imageItem = new QListWidgetItem;
+  imageItem->setIcon(QIcon(filepath));
+  int i = m_filespath.size();
+  imageItem->setText(QFileInfo(filepath).fileName() + "-" + QString::number(i));
+  imageItem->setTextAlignment(Qt::AlignHCenter);
+  //不要下面这个设置语句了
+  //imageItem->setSizeHint(QSize(100, 100));
+  ui->listWidget->addItem(imageItem);
+  //注意这个imageItem无需手动清除,listWidget中的clear方法会delete掉所有item.
+}
+
+
+/**
+ *   打开单张图片并更新View,List
+ */
+bool MainWindow::openSingleImg() {
+  QString filepath;
+
+  filepath = QFileDialog::getOpenFileName(
+      this, tr("Open Image"), ".",
+      tr("Image Files (*.png *.jpg *.bmp *.jpeg)"));
+  if (filepath.isEmpty()) return false;
+  //清空m_filesPath
+  m_filespath.clear();
+
+  //将filepath添加至m_filespath中
+  m_filespath.push_back(filepath);
+
+  //清除"视图"区域
+  clearView();
+  //清除"图片列表"区域
+  clearListWidget();
+
+  //添加图片到"视图"区域
+  addImage2View(filepath);
+  //添加缩略图到"列表"区域
+  addImage2List(filepath);
+  //显示
+  ui->listWidget->show();
+  return true;
+}
+
+bool MainWindow::openSeriesImg() {
+  QString filepath;
+  filepath = QFileDialog::getOpenFileName(
+      this, tr("Open Image"), ".",
+      tr("Image Files (*.png *.jpg *.bmp *.jpeg)"));
+  if (filepath.isEmpty()) return false;
+
+  QDir dir(QFileInfo(filepath).absoluteDir());
+  QStringList filters;
+  filters << "*.png"
+          << "*.jpg"
+          << "*.bmp"
+          << "*.jpeg";
+  dir.setNameFilters(filters);
+  QFileInfoList fileinfolist = dir.entryInfoList();
+
+  //清空m_filesPath
+  m_filespath.clear();
+  //清除"视图"区域
+  clearView();
+  //清除"图片列表"区域
+  clearListWidget();
+
+  for (auto itr = fileinfolist.begin(); 
+    itr != fileinfolist.end(); itr++) {
+    //将文件路径添加到m_filespath
+    QString tempPath = itr->absoluteFilePath();
+    m_filespath.push_back(tempPath);
+  //添加缩略图到"列表"区域
+    addImage2List(tempPath);
+  }
+
+  //添加第一张图片到"视图"区域
+  addImage2View(fileinfolist.begin()->absoluteFilePath());
+  //显示
+  ui->listWidget->show();
+  return true;
+}
+
+void MainWindow::on_twodim1_clicked() { 
+  if (!openSeriesImg()) return;
+  //设置图标disable
+  disableFileButtons();
+  m_twodim1file->setEnabled(true);
+  m_singleReconstructOp->setEnabled(false);
+  m_twoFuseThreeOP->setEnabled(true);
+  m_threeFuseThreeOP->setEnabled(false);
+}
+
+void MainWindow::on_threedim1_clicked() {
+  if (!openSeriesImg()) return;
+  //设置图标disable
+  disableFileButtons();
+  m_threedim1file->setEnabled(true);
+  m_singleReconstructOp->setEnabled(false);
+  m_twoFuseThreeOP->setEnabled(true);
+  m_threeFuseThreeOP->setEnabled(false);
+}
+
 void MainWindow::on_cancleCurrOP_clicked() { 
   enableFileButtons(); 
   m_singleReconstructOp->setEnabled(true);
@@ -169,22 +300,20 @@ void MainWindow::on_cancleCurrOP_clicked() {
   m_threeFuseThreeOP->setEnabled(true);
 }
 
-void MainWindow::on_singleReFile_clicked() { 
+void MainWindow::listItem_clicked(QListWidgetItem *item) { 
+  //qDebug() << ui->listWidget->row(item);
+  int index = ui->listWidget->row(item);
+  if (index == 0) return;
+  clearView();
+  addImage2View(m_filespath[index-1]);
+}
+
+void MainWindow::on_singleReFile_clicked() {
+    if (!openSingleImg()) return;
   //设置图标disable
   disableFileButtons();
   m_singleResconstructFile->setEnabled(true);
-  m_twoFuseThreeOP->setEnabled(false);
+  m_singleReconstructOp->setEnabled(true);
+  m_twoFuseThreeOP->setEnabled(true);
   m_threeFuseThreeOP->setEnabled(false);
-  //打开图片
-  QString filename;
-  QFileDialog *fileDlg = new QFileDialog(this);
-  fileDlg->setDirectory(".");
-  fileDlg->setNameFilter(tr("Images(*.png *.jpg *jpeg *bmp)"));
-  fileDlg->setViewMode(QFileDialog::Detail);
-  fileDlg->setFileMode(QFileDialog::ExistingFile);
-
-  if (!fileDlg->exec()) return;
-  filename = QFileDialog::getOpenFileName(this,
-    tr("Open Image"), ".", tr("Image Files (*.png *.jpg *.bmp *.jpeg)"));
-  if (filename.isEmpty()) return;
 }

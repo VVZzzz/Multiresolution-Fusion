@@ -116,6 +116,7 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainWindow.cpp" />
+    <ClCompile Include="MyGraphicsView.cpp" />
     <ClCompile Include="ribbon.cpp" />
     <ClCompile Include="ribbonbuttongroup.cpp" />
     <ClCompile Include="ribbontabcontent.cpp" />
@@ -154,6 +155,10 @@
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h" />
     <ClInclude Include="GeneratedFiles\ui_ribbonbuttongroup.h" />
     <ClInclude Include="GeneratedFiles\ui_ribbontabcontent.h" />
+    <QtMoc Include="MyGraphicsView.h">
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWidgets</IncludePath>
+      <IncludePath Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.\GeneratedFiles;.;$(QTDIR)\include;.\GeneratedFiles\$(ConfigurationName);$(QTDIR)\include\QtCore;$(QTDIR)\include\QtGui;$(QTDIR)\include\QtANGLE;$(QTDIR)\include\QtUiTools;$(QTDIR)\include\QtWidgets</IncludePath>
+    </QtMoc>
     <ClInclude Include="pic.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="tools.h" />

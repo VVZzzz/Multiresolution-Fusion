@@ -60,6 +60,9 @@
     <ClCompile Include="ribbontabcontent.cpp">
       <Filter>Source Files\Ribbon</Filter>
     </ClCompile>
+    <ClCompile Include="MyGraphicsView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -73,6 +76,9 @@
     </QtMoc>
     <QtMoc Include="ribbontabcontent.h">
       <Filter>Header Files\Ribbon</Filter>
+    </QtMoc>
+    <QtMoc Include="MyGraphicsView.h">
+      <Filter>Header Files</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
