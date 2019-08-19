@@ -37,6 +37,10 @@ class MainWindow : public QMainWindow {
   void on_cancleCurrOP_clicked();
   //点击List中项目对应的槽
   void listItem_clicked(QListWidgetItem *item);
+  //点击操作按钮
+  void on_singleReOP_clicked();
+  void on_twoFuseOP_clicked();
+  void on_threeFuseOP_clicked();
 
  private:
   Ui::MainWindowClass *ui;

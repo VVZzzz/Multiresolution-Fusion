@@ -63,6 +63,12 @@
     <ClCompile Include="MyGraphicsView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Annealing.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="func.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -113,11 +119,14 @@
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="pic.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
     <ClInclude Include="Annealing.h">
       <Filter>Header Files\Reconstruct</Filter>
     </ClInclude>
-    <ClInclude Include="pic.h">
-      <Filter>Header Files\util</Filter>
+    <ClInclude Include="func.h">
+      <Filter>Header Files\Reconstruct</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

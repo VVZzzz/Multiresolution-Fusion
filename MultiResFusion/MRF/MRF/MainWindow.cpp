@@ -9,6 +9,12 @@ MainWindow::MainWindow(QWidget *parent)
   initToolButtons();
 
   ui->setupUi(this);    
+
+  //初始化diasble toolsbutton
+  m_singleReconstructOp->setEnabled(false);
+  m_threeFuseThreeOP->setEnabled(false);
+  m_twoFuseThreeOP->setEnabled(false);
+  
   //连接信号和槽
   connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this,
           SLOT(listItem_clicked(QListWidgetItem *)));
@@ -111,6 +117,9 @@ void MainWindow::initToolButtons() {
   m_singleReconstructOp->setToolTip(TR("由单张图进行三维重建"));
   m_singleReconstructOp->setIcon(QIcon("./Resources/icons/add_link_2.svg"));
   m_singleReconstructOp->setEnabled(true);
+  //设置这些按钮,有按下效果
+  //m_singleReconstructOp->setCheckable(true);
+  //m_singleReconstructOp->setAutoExclusive(true);
 
   m_twoFuseThreeOP = new QToolButton(this);
   m_twoFuseThreeOP->setObjectName("twoFuseOP");
@@ -118,6 +127,9 @@ void MainWindow::initToolButtons() {
   m_twoFuseThreeOP->setToolTip(TR("将二维重建融合进三维"));
   m_twoFuseThreeOP->setIcon(QIcon("./Resources/icons/add_link_2.svg"));
   m_twoFuseThreeOP->setEnabled(true);
+  //设置这些按钮,有按下效果
+  //m_twoFuseThreeOP->setCheckable(true);
+  //m_twoFuseThreeOP->setAutoExclusive(true);
 
   m_threeFuseThreeOP = new QToolButton(this);
   m_threeFuseThreeOP->setObjectName("threeFuseOP");
@@ -125,6 +137,9 @@ void MainWindow::initToolButtons() {
   m_threeFuseThreeOP->setToolTip(TR("将三维融合进三维"));
   m_threeFuseThreeOP->setIcon(QIcon("./Resources/icons/add_link_2.svg"));
   m_threeFuseThreeOP->setEnabled(true);
+  //设置这些按钮,有按下效果
+  //m_threeFuseThreeOP->setCheckable(true);
+  //m_threeFuseThreeOP->setAutoExclusive(true);
 
   //"工具"组按钮
   m_cancleCurrOP = new QToolButton(this);
@@ -296,8 +311,13 @@ void MainWindow::on_threedim1_clicked() {
 void MainWindow::on_cancleCurrOP_clicked() { 
   enableFileButtons(); 
   m_singleReconstructOp->setEnabled(true);
+  m_singleReconstructOp->setDown(false);
+
   m_twoFuseThreeOP->setEnabled(true);
+  m_twoFuseThreeOP->setDown(false);
+
   m_threeFuseThreeOP->setEnabled(true);
+  m_threeFuseThreeOP->setDown(false);
 }
 
 void MainWindow::listItem_clicked(QListWidgetItem *item) { 
@@ -306,6 +326,24 @@ void MainWindow::listItem_clicked(QListWidgetItem *item) {
   if (index == 0) return;
   clearView();
   addImage2View(m_filespath[index-1]);
+}
+
+void MainWindow::on_singleReOP_clicked() {
+  m_singleReconstructOp->setDown(true);
+  m_twoFuseThreeOP->setDown(false);
+  m_threeFuseThreeOP->setDown(false);
+}
+
+void MainWindow::on_twoFuseOP_clicked() {
+  m_singleReconstructOp->setDown(false);
+  m_twoFuseThreeOP->setDown(true);
+  m_threeFuseThreeOP->setDown(false);
+}
+
+void MainWindow::on_threeFuseOP_clicked() {
+  m_singleReconstructOp->setDown(false);
+  m_twoFuseThreeOP->setDown(false);
+  m_threeFuseThreeOP->setDown(true);
 }
 
 void MainWindow::on_singleReFile_clicked() {
