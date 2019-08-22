@@ -1,2 +1,3 @@
 #pragma once
-void TwoReconstruct();
+#include <QString>
+void TwoReconstruct(const QString &src,const QString &);

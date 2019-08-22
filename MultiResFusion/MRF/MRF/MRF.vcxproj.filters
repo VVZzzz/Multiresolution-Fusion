@@ -69,6 +69,12 @@
     <ClCompile Include="func.cpp">
       <Filter>Source Files\Reconstruct</Filter>
     </ClCompile>
+    <ClCompile Include="singleReconDlg.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkThread.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -86,6 +92,15 @@
     <QtMoc Include="MyGraphicsView.h">
       <Filter>Header Files</Filter>
     </QtMoc>
+    <QtMoc Include="singleReconDlg.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
+    <QtMoc Include="WorkThread.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
+    <QtMoc Include="Annealing.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="MainWindow.ui">
@@ -95,6 +110,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="ribbonbuttongroup.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="singleReconDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -122,11 +140,11 @@
     <ClInclude Include="pic.h">
       <Filter>Header Files\util</Filter>
     </ClInclude>
-    <ClInclude Include="Annealing.h">
-      <Filter>Header Files\Reconstruct</Filter>
-    </ClInclude>
     <ClInclude Include="func.h">
       <Filter>Header Files\Reconstruct</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_singleReconDialog.h">
+      <Filter>Generated Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

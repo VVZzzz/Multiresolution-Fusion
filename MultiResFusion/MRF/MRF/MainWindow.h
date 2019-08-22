@@ -7,6 +7,9 @@
 #include <vector>
 #include "ui_MainWindow.h"
 #include "pic.h"
+#include "singleReconDlg.h"
+#include "Annealing.h"
+#include "WorkThread.h"
 
 
 //程序主界面类
@@ -41,6 +44,12 @@ class MainWindow : public QMainWindow {
   void on_singleReOP_clicked();
   void on_twoFuseOP_clicked();
   void on_threeFuseOP_clicked();
+  //工作线程完成
+  void on_workthread_finished();
+  //收到工作线程进度
+  void on_progress(int);
+  //工作线程被取消操作
+  void on_canlethread();
 
  private:
   Ui::MainWindowClass *ui;
@@ -73,6 +82,17 @@ class MainWindow : public QMainWindow {
   //数据类
   std::vector<QString> m_filespath;  //存放读入图片的路径
   QPixmap m_pixmap;                  //图片缩略图
+
+  //自定义对话框类
+  SingleReconDialog *m_singleReconDlg;  //三维重建对话框
+
+  //三维重建,二维融合三维核心类
+  CAnnealing *m_pCAnneal;
+
+  //工作线程
+  WorkThread *m_pWorkthread;
+  
+  
 
 };
 #endif 

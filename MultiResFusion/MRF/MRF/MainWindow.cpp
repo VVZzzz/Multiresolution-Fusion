@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 #include <QDebug>
 #include <QFileDialog>
+#include <QMessageBox>
 #include "tools.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -10,6 +11,12 @@ MainWindow::MainWindow(QWidget *parent)
 
   ui->setupUi(this);    
 
+  //初始化进度条text
+  ui->label->setText(TR("操作进度指示"));
+  ui->progressBar->reset();
+  ui->progressBar->setRange(0, 100);
+  ui->progressBar->setVisible(false);
+
   //初始化diasble toolsbutton
   m_singleReconstructOp->setEnabled(false);
   m_threeFuseThreeOP->setEnabled(false);
@@ -17,7 +24,7 @@ MainWindow::MainWindow(QWidget *parent)
   
   //连接信号和槽
   connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this,
-          SLOT(listItem_clicked(QListWidgetItem *)));
+          SLOT(listItem_clicked(QListWidgetItem *))); 
 
   //初始化状态栏
   m_sizeLabel = new QLabel(this);
@@ -63,11 +70,32 @@ MainWindow::MainWindow(QWidget *parent)
                                  m_threeFuseThreeOP);
   ui->ribbonTabWidget->addButton(TR("工具"), TR("取消当前操作"),
                                  m_cancleCurrOP);
-
   initListWidget();
+
+  
+  m_pCAnneal = nullptr;
+  //为自定义对话框分配空间
+  m_singleReconDlg = new SingleReconDialog(this);
+
+  //初始化线程对象
+  m_pWorkthread = new WorkThread();
+  //连接工作线程对象信号和
+  connect(m_pWorkthread, &QThread::finished, this,
+          &MainWindow::on_workthread_finished);
+  connect(m_pWorkthread, &WorkThread::opCancle, this,
+          &MainWindow::on_canlethread);
 }
 
-MainWindow::~MainWindow() { delete ui; }
+MainWindow::~MainWindow() { 
+  delete ui; 
+  if (m_pCAnneal != nullptr) {
+    delete m_pCAnneal;
+    if (m_pWorkthread) {
+      delete m_pWorkthread;
+      m_pWorkthread = nullptr;
+    }
+  }
+}
 
 void MainWindow::initToolButtons() {
   //在"打开文件"下添加按钮
@@ -218,7 +246,6 @@ void MainWindow::addImage2List(const QString &filepath) {
   //注意这个imageItem无需手动清除,listWidget中的clear方法会delete掉所有item.
 }
 
-
 /**
  *   打开单张图片并更新View,List
  */
@@ -272,13 +299,16 @@ bool MainWindow::openSeriesImg() {
   //清除"图片列表"区域
   clearListWidget();
 
+  int total = fileinfolist.size();
+  int curr = 1;
   for (auto itr = fileinfolist.begin(); 
-    itr != fileinfolist.end(); itr++) {
+    itr != fileinfolist.end(); itr++,curr++) {
     //将文件路径添加到m_filespath
     QString tempPath = itr->absoluteFilePath();
     m_filespath.push_back(tempPath);
   //添加缩略图到"列表"区域
     addImage2List(tempPath);
+    ui->progressBar->setValue(curr * 100 / total);
   }
 
   //添加第一张图片到"视图"区域
@@ -289,6 +319,10 @@ bool MainWindow::openSeriesImg() {
 }
 
 void MainWindow::on_twodim1_clicked() { 
+  //设置进度条
+  ui->label->setText(TR("打开图片"));
+  ui->progressBar->setVisible(true);
+
   if (!openSeriesImg()) return;
   //设置图标disable
   disableFileButtons();
@@ -296,6 +330,8 @@ void MainWindow::on_twodim1_clicked() {
   m_singleReconstructOp->setEnabled(false);
   m_twoFuseThreeOP->setEnabled(true);
   m_threeFuseThreeOP->setEnabled(false);
+  ui->label->setText(TR("操作完成!"));
+  ui->progressBar->setVisible(false);
 }
 
 void MainWindow::on_threedim1_clicked() {
@@ -309,6 +345,10 @@ void MainWindow::on_threedim1_clicked() {
 }
 
 void MainWindow::on_cancleCurrOP_clicked() { 
+  if (m_pCAnneal) {
+    //取消在工作线程中正在执行的操作
+    m_pCAnneal->ShutDown();
+  }
   enableFileButtons(); 
   m_singleReconstructOp->setEnabled(true);
   m_singleReconstructOp->setDown(false);
@@ -332,6 +372,39 @@ void MainWindow::on_singleReOP_clicked() {
   m_singleReconstructOp->setDown(true);
   m_twoFuseThreeOP->setDown(false);
   m_threeFuseThreeOP->setDown(false);
+
+  QString savepath ;
+  int finalsz;
+  if (m_singleReconDlg->exec() == QDialog::Accepted) {
+  savepath = m_singleReconDlg->getPath();
+    finalsz = m_singleReconDlg->getSize();
+  } else {
+    QMessageBox msgbox;
+    msgbox.setText(TR("操作取消!"));
+    msgbox.exec();
+    m_singleReconstructOp->setDown(false);
+    return;
+  }
+
+  m_pCAnneal = new CAnnealing(m_filespath[0], finalsz, 3);
+  //连接三维重建操作进度信号和槽
+  connect(m_pCAnneal, &CAnnealing::CurrProgress, this,
+          &MainWindow::on_progress);
+  //或者
+  //connect(m_pCAnneal, SIGNAL(CurrProgress(int)), this,
+   //       SLOT(on_progress(int)));
+
+  m_pCAnneal->SetReconPath(m_filespath[0], savepath);
+  m_pWorkthread->setAnnealPtr(m_pCAnneal);
+  m_pWorkthread->start();
+  //m_pCAnneal->Reconstruct();
+  //使用完就delete掉
+  //delete m_pCAnneal;
+  //m_pCAnneal = nullptr;
+  //设置进度条
+  ui->label->setText(TR("重建操作:"));
+  ui->progressBar->reset();
+  ui->progressBar->setVisible(true);
 }
 
 void MainWindow::on_twoFuseOP_clicked() {
@@ -346,12 +419,41 @@ void MainWindow::on_threeFuseOP_clicked() {
   m_threeFuseThreeOP->setDown(true);
 }
 
+void MainWindow::on_workthread_finished() {
+  if (m_pCAnneal) {
+    //解绑这个m_pCAnneal对象的信号
+    m_pCAnneal->disconnect();
+    delete m_pCAnneal;
+    m_pCAnneal = nullptr;
+  }
+  ui->label->setText(TR("操作完成!"));
+  ui->progressBar->setValue(100);
+  ui->progressBar->setVisible(false);
+}
+
+void MainWindow::on_progress(int val) { ui->progressBar->setValue(val); }
+
+void MainWindow::on_canlethread() { 
+  ui->progressBar->setVisible(false);
+  ui->label->setText(TR("操作取消!"));
+  QMessageBox msgBox; 
+  msgBox.setText(TR("操作已取消"));
+  msgBox.exec();
+}
+
 void MainWindow::on_singleReFile_clicked() {
+  //设置进度条
+  ui->label->setText(TR("打开图片"));
     if (!openSingleImg()) return;
+  ui->progressBar->setVisible(true);
+  ui->progressBar->setValue(100);
   //设置图标disable
   disableFileButtons();
   m_singleResconstructFile->setEnabled(true);
   m_singleReconstructOp->setEnabled(true);
   m_twoFuseThreeOP->setEnabled(true);
   m_threeFuseThreeOP->setEnabled(false);
+
+  ui->label->setText(TR("操作完成!"));
+  ui->progressBar->setVisible(false);
 }
