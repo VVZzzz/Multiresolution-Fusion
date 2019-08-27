@@ -15,7 +15,7 @@ void WorkThread::setAnnealPtr(CAnnealing *ptr) {
 
 void WorkThread::run() { 
   if (pAnnealing) {
-    if (!pAnnealing->Reconstruct()) {
+    if (!pAnnealing->Work()) {
       emit opCancle();
     } 
   }

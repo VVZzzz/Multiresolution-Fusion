@@ -76,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent)
   m_pCAnneal = nullptr;
   //为自定义对话框分配空间
   m_singleReconDlg = new SingleReconDialog(this);
+  m_twoFuseDlg = new TwoFuseDlg(this);
 
   //初始化线程对象
   m_pWorkthread = new WorkThread();
@@ -102,16 +103,16 @@ void MainWindow::initToolButtons() {
   //单张三维重建
   m_singleResconstructFile = new QToolButton(this);
   m_singleResconstructFile->setObjectName("singleReFile");
-  m_singleResconstructFile->setText(TR("打开单张三维重建"));
-  m_singleResconstructFile->setToolTip(TR("打开用来三维重建的单张序列图"));
+  m_singleResconstructFile->setText(TR("打开单张二维图片"));
+  m_singleResconstructFile->setToolTip(TR("打开用来三维重建的单张图"));
   m_singleResconstructFile->setIcon(QIcon("./Resources/icons/add_folder_2.svg"));
   m_singleResconstructFile->setEnabled(true);
 
   //二维融合三维
   m_twodim1file = new QToolButton(this);
   m_twodim1file->setObjectName("twodim1");
-  m_twodim1file->setText(TR("打开三维重建序列图"));
-  m_twodim1file->setToolTip(TR("打开经过单张三维重建得到的序列图"));
+  m_twodim1file->setText(TR("打开单张二维图片"));
+  m_twodim1file->setToolTip(TR("打开要融合的二维图片"));
   m_twodim1file->setIcon(QIcon("./Resources/icons/add_folder_2.svg"));
   m_twodim1file->setEnabled(true);
 
@@ -290,7 +291,7 @@ bool MainWindow::openSeriesImg() {
           << "*.bmp"
           << "*.jpeg";
   dir.setNameFilters(filters);
-  QFileInfoList fileinfolist = dir.entryInfoList();
+  m_fileinfolist = dir.entryInfoList();
 
   //清空m_filesPath
   m_filespath.clear();
@@ -299,10 +300,10 @@ bool MainWindow::openSeriesImg() {
   //清除"图片列表"区域
   clearListWidget();
 
-  int total = fileinfolist.size();
+  int total = m_fileinfolist.size();
   int curr = 1;
-  for (auto itr = fileinfolist.begin(); 
-    itr != fileinfolist.end(); itr++,curr++) {
+  for (auto itr = m_fileinfolist.begin(); 
+    itr != m_fileinfolist.end(); itr++,curr++) {
     //将文件路径添加到m_filespath
     QString tempPath = itr->absoluteFilePath();
     m_filespath.push_back(tempPath);
@@ -312,13 +313,35 @@ bool MainWindow::openSeriesImg() {
   }
 
   //添加第一张图片到"视图"区域
-  addImage2View(fileinfolist.begin()->absoluteFilePath());
+  addImage2View(m_fileinfolist.begin()->absoluteFilePath());
   //显示
   ui->listWidget->show();
   return true;
 }
 
 void MainWindow::on_twodim1_clicked() { 
+  //设置读入类型
+  m_imgtype = OPType::SINGLE;
+  //设置进度条
+  ui->label->setText(TR("打开图片"));
+
+  if (!openSingleImg()) return;
+  ui->progressBar->setVisible(true);
+  ui->progressBar->setValue(100);
+  //设置图标disable
+  disableFileButtons();
+  m_twodim1file->setEnabled(true);
+  m_singleReconstructOp->setEnabled(false);
+  m_twoFuseThreeOP->setEnabled(true);
+  m_threeFuseThreeOP->setEnabled(false);
+
+  ui->label->setText(TR("操作完成!"));
+  ui->progressBar->setVisible(false);
+}
+
+void MainWindow::on_threedim1_clicked() {
+  //设置读入类型
+  m_imgtype = OPType::LOW2SERIES;
   //设置进度条
   ui->label->setText(TR("打开图片"));
   ui->progressBar->setVisible(true);
@@ -326,22 +349,12 @@ void MainWindow::on_twodim1_clicked() {
   if (!openSeriesImg()) return;
   //设置图标disable
   disableFileButtons();
-  m_twodim1file->setEnabled(true);
+  m_threedim1file->setEnabled(true);
   m_singleReconstructOp->setEnabled(false);
   m_twoFuseThreeOP->setEnabled(true);
   m_threeFuseThreeOP->setEnabled(false);
   ui->label->setText(TR("操作完成!"));
   ui->progressBar->setVisible(false);
-}
-
-void MainWindow::on_threedim1_clicked() {
-  if (!openSeriesImg()) return;
-  //设置图标disable
-  disableFileButtons();
-  m_threedim1file->setEnabled(true);
-  m_singleReconstructOp->setEnabled(false);
-  m_twoFuseThreeOP->setEnabled(true);
-  m_threeFuseThreeOP->setEnabled(false);
 }
 
 void MainWindow::on_cancleCurrOP_clicked() { 
@@ -358,6 +371,7 @@ void MainWindow::on_cancleCurrOP_clicked() {
 
   m_threeFuseThreeOP->setEnabled(true);
   m_threeFuseThreeOP->setDown(false);
+  m_imgtype = EMPTY;
 }
 
 void MainWindow::listItem_clicked(QListWidgetItem *item) { 
@@ -369,6 +383,13 @@ void MainWindow::listItem_clicked(QListWidgetItem *item) {
 }
 
 void MainWindow::on_singleReOP_clicked() {
+  if (m_imgtype == EMPTY) {
+    QMessageBox msgbox;
+    msgbox.setText(TR("请重新打开处理图片!"));
+    msgbox.exec();
+    m_singleReconstructOp->setDown(false);
+    return;
+  }
   m_singleReconstructOp->setDown(true);
   m_twoFuseThreeOP->setDown(false);
   m_threeFuseThreeOP->setDown(false);
@@ -386,15 +407,15 @@ void MainWindow::on_singleReOP_clicked() {
     return;
   }
 
+  if (m_pCAnneal) delete m_pCAnneal;
+  //在这里申请内存,在线程取消或者完成时,会直接delete
   m_pCAnneal = new CAnnealing(m_filespath[0], finalsz, 3);
   //连接三维重建操作进度信号和槽
   connect(m_pCAnneal, &CAnnealing::CurrProgress, this,
           &MainWindow::on_progress);
-  //或者
-  //connect(m_pCAnneal, SIGNAL(CurrProgress(int)), this,
-   //       SLOT(on_progress(int)));
 
-  m_pCAnneal->SetReconPath(m_filespath[0], savepath);
+  m_pCAnneal->SetSavePath(savepath);
+  m_pCAnneal->SetReconOP();
   m_pWorkthread->setAnnealPtr(m_pCAnneal);
   m_pWorkthread->start();
   //m_pCAnneal->Reconstruct();
@@ -408,12 +429,91 @@ void MainWindow::on_singleReOP_clicked() {
 }
 
 void MainWindow::on_twoFuseOP_clicked() {
+  if (m_imgtype == EMPTY) {
+    QMessageBox msgbox;
+    msgbox.setText(TR("请重新打开处理图片!"));
+    msgbox.exec();
+    m_singleReconstructOp->setDown(false);
+    return;
+  }
   m_singleReconstructOp->setDown(false);
   m_twoFuseThreeOP->setDown(true);
   m_threeFuseThreeOP->setDown(false);
+
+  QString imgpath;
+  QString savepath;
+  QFileInfoList fileinfolist;
+  int finalsz;
+  if (m_pCAnneal) delete m_pCAnneal;
+  if (m_imgtype == OPType::SINGLE) 
+    m_twoFuseDlg->setType(SINGLE);
+   else if(m_imgtype == OPType::LOW2SERIES) 
+    m_twoFuseDlg->setType(LOW2SERIES);
+  
+  if (m_twoFuseDlg->exec() == QDialog::Accepted) {
+    imgpath = m_twoFuseDlg->getImgPath();
+    savepath = m_twoFuseDlg->getSavePath();
+    fileinfolist = m_twoFuseDlg->getInfoList();
+  } else {
+    QMessageBox msgbox;
+    msgbox.setText(TR("操作取消!"));
+    msgbox.exec();
+    m_twoFuseThreeOP->setDown(false);
+    return;
+  }
+
+  //已打开单张
+  if (m_imgtype == OPType::SINGLE) {
+    finalsz = QImage(fileinfolist.begin()->absoluteFilePath()).width();
+    if (finalsz < m_pixmap.width()) {
+      QMessageBox msgbox;
+      msgbox.setText(TR("序列图尺寸小于已打开图片!"));
+      msgbox.exec();
+      m_twoFuseThreeOP->setDown(false);
+      return;
+    }
+    m_pCAnneal = new CAnnealing(m_filespath[0], finalsz, 3);
+    //m_pCAnneal->Load3DImg(fileinfolist);
+  } 
+  //已打开序列图
+  else if (m_imgtype == OPType::LOW2SERIES) {
+    finalsz = m_pixmap.width();
+    if (finalsz < QImage(imgpath).width()) {
+      QMessageBox msgbox;
+      msgbox.setText(TR("序列图尺寸小于打开图片!"));
+      msgbox.exec();
+      m_twoFuseThreeOP->setDown(false);
+      return;
+    }
+    fileinfolist = m_fileinfolist;
+    m_pCAnneal = new CAnnealing(imgpath, finalsz, 3);
+  }
+
+  //连接三维重建操作进度信号和槽
+  connect(m_pCAnneal, &CAnnealing::CurrProgress, this,
+          &MainWindow::on_progress);
+
+  m_pCAnneal->Load3DImg(fileinfolist);
+  m_pCAnneal->SetSavePath(savepath);
+  m_pCAnneal->SetFuseOP();
+
+  m_pWorkthread->setAnnealPtr(m_pCAnneal);
+  m_pWorkthread->start();
+
+  ui->label->setText(TR("融合操作:"));
+  ui->progressBar->reset();
+  ui->progressBar->setVisible(true);
+
 }
 
 void MainWindow::on_threeFuseOP_clicked() {
+  if (m_imgtype == EMPTY) {
+    QMessageBox msgbox;
+    msgbox.setText(TR("请重新打开处理图片!"));
+    msgbox.exec();
+    m_singleReconstructOp->setDown(false);
+    return;
+  }
   m_singleReconstructOp->setDown(false);
   m_twoFuseThreeOP->setDown(false);
   m_threeFuseThreeOP->setDown(true);
@@ -429,6 +529,15 @@ void MainWindow::on_workthread_finished() {
   ui->label->setText(TR("操作完成!"));
   ui->progressBar->setValue(100);
   ui->progressBar->setVisible(false);
+
+  enableFileButtons();
+  m_singleReconstructOp->setEnabled(true);
+  m_singleReconstructOp->setDown(false);
+  m_twoFuseThreeOP->setEnabled(true);
+  m_twoFuseThreeOP->setDown(false);
+  m_threeFuseThreeOP->setEnabled(true);
+  m_threeFuseThreeOP->setDown(false);
+  m_imgtype = EMPTY;
 }
 
 void MainWindow::on_progress(int val) { ui->progressBar->setValue(val); }
@@ -442,6 +551,8 @@ void MainWindow::on_canlethread() {
 }
 
 void MainWindow::on_singleReFile_clicked() {
+  //设置图片类型
+  m_imgtype = OPType::SINGLE;
   //设置进度条
   ui->label->setText(TR("打开图片"));
     if (!openSingleImg()) return;
@@ -451,7 +562,7 @@ void MainWindow::on_singleReFile_clicked() {
   disableFileButtons();
   m_singleResconstructFile->setEnabled(true);
   m_singleReconstructOp->setEnabled(true);
-  m_twoFuseThreeOP->setEnabled(true);
+  m_twoFuseThreeOP->setEnabled(false);
   m_threeFuseThreeOP->setEnabled(false);
 
   ui->label->setText(TR("操作完成!"));

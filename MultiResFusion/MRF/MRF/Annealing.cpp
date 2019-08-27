@@ -32,11 +32,10 @@ CAnnealing::CAnnealing(const QString& imgpath, int final_imgsz,
 
   //取消操作标志
   m_ShutDown = false;
+
 }
 
-void CAnnealing::SetReconPath(const QString& imgpath,
-                              const QString& dstimgpath) {
-  m_single_srcimg_path = imgpath;
+void CAnnealing::SetSavePath(const QString& dstimgpath) {
   m_dstimg_path = dstimgpath;
 }
 
@@ -204,6 +203,177 @@ bool CAnnealing::Reconstruct() {
     Set_reconstruct_to_inital();  //将reconstructed中的中间重建结果转移到inital
     Putout_step_image(m_dstimg_path);  //输出原始图像对应网格图像
   }
+
+  return true;
+}
+
+bool CAnnealing::TwoFuseThree() { 
+  
+  m_Rec_template_size = 3;  //选择多点密度函数模板的尺寸大小,默认为3
+  m_Rec_min_grid_size = 16;  //最小网格时图像的尺寸大小,默认16
+  //共需要的扩展级数
+  int grid_times =
+      (log((float)m_initial_width) - log((float)m_Rec_min_grid_size)) /
+      log(2.0);
+  //先定义一个三维容器，用于存放初始最小网格
+  //(采样得到二维，再根据孔隙度（inital_white_point*(m_multiple*m_multiple)*new_inital_size）给三维赋初值），在m_initial_rand_data中
+  //设置最初随机数据与Set_inital_to_reconstruct_uncondition_1配合使用
+  // Set_inital_data();
+  Set_inital_data_2fuse3();
+
+  int judgements_times = 0;
+  int energy_up = 0;             //交换前的能量大小
+  int energy_down = 0;           //交换后的能量大小
+  int energy_differ = 0;         //相邻两次的能量差
+  int energy_jump = 0;           //对能量差的限制
+  int energy_judge = 0;          //外循环跳出条件
+  int percent = 0.0005;          //能量差百分比,默认0.0005不必修改
+  int adjust_time = 0;           //判断极端情况是否出现
+  int refuse_times_out = 0;      //拒绝次数
+  int max_refuse_times_out = 1;  //最大拒绝次数
+  int loop_in = 0;               //控制内部循环
+  int loop_out = 0;              //控制外部循环
+  int loop_in_times = 0;         //内部循环次数
+  int loop_out_times = 200;      //外部循环次数
+  int main_white_point_number = 0;  //选择白色交换点数量
+  int main_black_point_number = 0;  //选择黑色交换点数量
+
+  int energy_process = 0;
+  int engerry_change_white = 0;
+  int engerry_change_black = 0;
+  int judgement_times = 0;
+
+  int prgblock = 100 / (grid_times + 1);
+  for (int i = 0; i != grid_times + 1; ++i) {
+    if (m_ShutDown) return false;
+    //发送进度
+    int currprg = i * prgblock;
+    emit CurrProgress(currprg);
+    
+    judgement_times = 0;
+    Transfer_grid_size(i);  //获取当前网格的图像尺寸给m_new_vector_size
+    TI_Multi_point_density_function_p();  //计算对应网格大小为i时图像的多点密度函数
+    Putout_inital_image(m_dstimg_path);  //输出每一级原始图像对应网格图像
+    if (i == 0) {
+      //将随机数据放置到重建容器m_reconstruct_vec[i][j][k]中,针对最开始尺寸
+      //大部分工作已经在Set_inital_data中做过了
+      Set_inital_to_reconstruct_uncondition_1();
+    } else {
+      //先将上级网格点中全1和全0位置在当前网格中配置为全1和全0（从第一级三维开始就已经乘过倍数了），其余再配置随机数
+      //按照TI中白色点配置随机数
+      Set_inital_to_reconstruct_uncondition_2_2fuse3();
+    }
+    Recstruct_Multi_point_density_function_p();  //计算对应网格大小为i时重建图像的多点密度函数
+    Calculate_E_differ(energy_up);  //计算多点密度函数能量差值
+    // cout << "origial_Energy_up:" << Energy_up << endl;   //刚布好点后的energy
+    // energy_limit = percent*Energy_up;    // 这个energy_limit没有用到啊 from
+    // wrh
+
+    energy_judge = energy_up;
+    adjust_time = energy_up;
+    energy_jump = 0;
+
+    float inner_prgblock = prgblock * 1.0 / loop_out_times;  //wrh
+    for (loop_out = 0; loop_out < loop_out_times; loop_out++) {
+      if (m_ShutDown) return false;
+      emit CurrProgress(currprg + loop_out * inner_prgblock);  //wrh
+      if (i <= (grid_times + 1) / 2)  //设置不使用相邻反相选点法的网络级数
+      {
+        //所有点都交换，把待交换的点选择好后坐标放入white_point_x等容器中
+        Select_inital_exchange_point_uncondition_2fuse3(main_white_point_number,
+                                                 main_black_point_number);
+      } else {
+        // temperory中放交换的点，也是放入white_point_x等容器中
+        Select_final_exchange_point_uncondition_2fuse3(main_white_point_number,
+                                                main_black_point_number);
+        energy_process = energy_up;
+      }
+      Random_position(loop_out);
+      //由于是不同相点之间的相位互换，所以应将较少数量的相作为交换的最大次数
+      if (main_black_point_number > main_white_point_number) {
+        loop_in_times = main_white_point_number;
+      } else {
+        loop_in_times = main_black_point_number;
+      }
+      for (loop_in = 0; loop_in != loop_in_times; loop_in++)  //真正的在交换
+      {
+        if (m_ShutDown) return false;
+        if (main_white_point_number != 0 && main_black_point_number != 0) {
+          //确定在white_point_x(black)中的偏移位置white_rand_site
+          //从备选点集合中随机交换的两点
+          Exchange_two_point();
+          Get_exchange_site();  //得到交换两点的坐标，为后面使用
+                                //快速计算多点密度函数
+          Recstruct_Multi_point_density_function_fast_p(
+              energy_down, engerry_change_white, engerry_change_black);
+
+          energy_differ = energy_down - energy_up;
+          if (energy_differ <= 0) {
+            energy_up = energy_down;  //用新的较小的能量作为Energy_up
+            Delete_exchange_point();  //将交换后的点删除，并标记出来，
+            main_black_point_number--;
+            main_white_point_number--;
+          } else if (judgement_times >= 1) {
+            energy_up = energy_down;
+            Delete_exchange_point();  //将交换后的点删除，并标记出来，
+            main_black_point_number--;
+            main_white_point_number--;
+            judgement_times = 0;
+          } else {  //说明当前位置的白点不能改变相位（占大头，不能交换），黑点需要改变，但需要与另一个白点进行交换（所以不delete）
+            if (engerry_change_white > 0 && engerry_change_black < 0) {
+              Recover_Multi_point_density_function();  //恢复到前一状态的多点密度函数
+              Reverse_exchange_point();  //将不满足条件的交换点复原，
+              Delete_unexchange_white_point();  //将交换后的点删除，
+              main_white_point_number--;
+            } else if (engerry_change_white < 0 && engerry_change_black > 0) {
+              Recover_Multi_point_density_function();  //恢复到前一状态的多点密度函数
+              Reverse_exchange_point();  //将不满足条件的交换点复原，
+              Delete_unexchange_black_point();  //将交换后的点删除，
+              main_black_point_number--;
+            } else {
+              Recover_Multi_point_density_function();  //恢复到前一状态的多点密度函数
+              Reverse_exchange_point();  //将不满足条件的交换点复原，
+              Delete_unexchange_two_phase_point();  //将交换后的点删除，
+              main_black_point_number--;
+              main_white_point_number--;
+            }
+          }
+        }
+        if (main_white_point_number == 0 || main_black_point_number == 0) {
+          break;
+        }
+      }
+      Delete_site_vector();  //将保持交换点的容器清空，以备下一轮循环，
+      if (adjust_time == energy_up) {
+        judgement_times++;
+      }
+      ////////////////////////////////////
+      if (energy_jump == energy_up) {
+        refuse_times_out++;
+      } else {
+        energy_jump = energy_up;
+        refuse_times_out = 0;
+      }
+      // cout << "Energy_up:" << Energy_up << endl;
+      ////////////////////////////////////
+      if (refuse_times_out >= max_refuse_times_out) {
+        break;
+      }
+
+      // if ((Energy_judge-Energy_up)<Energy_limit && refuse_times_out==0)
+      if ((float)(energy_judge - energy_up) / energy_up < 0.005 &&
+          refuse_times_out == 0) {
+        break;
+      } else {
+        energy_judge = energy_up;
+      }
+      /////////////////////////////////////
+    }
+    Set_reconstruct_to_inital();  //将reconstructed中的中间重建结果转移到inital
+    Putout_step_image(m_dstimg_path);  //输出原始图像对应网格图像
+  }
+  Set_reconstruct_to_final();
+  Putout_final_image(m_dstimg_path);
 
   return true;
 }
@@ -2955,7 +3125,7 @@ void CAnnealing::Set_reconstruct_to_inital() {
 
 void CAnnealing::Putout_step_image(const QString& filepath) {
   QDir qdir(filepath);
-  if (!qdir.exists("res")) qdir.mkdir("res");
+  if (!qdir.exists("reconstruct")) qdir.mkdir("reconstruct");
   QImage img(m_vector_size, m_vector_size, QImage::Format_Grayscale8);
   int i = 0, j = 0, k = 0, q = 0, white_point = 0;
   for (q = 0; q != m_new_vector_size; q++) {
@@ -2970,7 +3140,7 @@ void CAnnealing::Putout_step_image(const QString& filepath) {
     sprintf(name, "%d.bmp", q);
     //最终图片名格式为数字编号，例“1.bmp”
     QString respath = filepath;
-    respath.append("/res/").append(name);
+    respath.append("/reconstruct/").append(name);
     img.save(respath, nullptr, 100);
   }
 }
@@ -3007,7 +3177,7 @@ void CAnnealing::Set_reconstruct_to_final() {
 
 void CAnnealing::Putout_final_image(const QString& filepath) {
   QDir qdir(filepath);
-  if (!qdir.exists("final")) qdir.mkdir("final");
+  if (!qdir.exists("fuse")) qdir.mkdir("fuse");
   QImage img(m_vector_size, m_vector_size, QImage::Format_Grayscale8);
 
   for (int i = 0; i < m_final_imgsize; i++) {
@@ -3018,9 +3188,9 @@ void CAnnealing::Putout_final_image(const QString& filepath) {
       }
     }
     char name[100];
-    sprintf(name, "%d.bmp", m_gridsize);
+    sprintf(name, "%d.bmp", i);
     QString respath = filepath;
-    respath.append("/final/").append(name);
+    respath.append("/fuse/").append(name);
     img.save(respath, nullptr, 100);
   }
 }

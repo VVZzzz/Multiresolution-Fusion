@@ -10,11 +10,19 @@
 #include "singleReconDlg.h"
 #include "Annealing.h"
 #include "WorkThread.h"
+#include "TwoFuseDlg.h"
 
 
 //程序主界面类
 class MainWindow : public QMainWindow {
   Q_OBJECT
+  enum OPType {
+    SINGLE,       //单张二维图
+    LOW2SERIES,   //低分辨率大孔序列图(2融合3用)
+    HIGH3SERIES,  //高分辨率小孔序列图(3融合3用)
+    LOW3SERIES,   //低分辨率大孔序列图(3融合3用)
+    EMPTY         //默认值(空)
+  };
 
  public:
   MainWindow(QWidget *parent = Q_NULLPTR);
@@ -82,15 +90,20 @@ class MainWindow : public QMainWindow {
   //数据类
   std::vector<QString> m_filespath;  //存放读入图片的路径
   QPixmap m_pixmap;                  //图片缩略图
+  QFileInfoList m_fileinfolist;
 
   //自定义对话框类
   SingleReconDialog *m_singleReconDlg;  //三维重建对话框
+  TwoFuseDlg *m_twoFuseDlg;
 
   //三维重建,二维融合三维核心类
   CAnnealing *m_pCAnneal;
 
   //工作线程
   WorkThread *m_pWorkthread;
+
+  //读入图的类型
+  OPType m_imgtype;
   
   
 

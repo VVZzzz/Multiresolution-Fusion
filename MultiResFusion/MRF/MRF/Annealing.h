@@ -20,14 +20,15 @@ class CAnnealing :public QObject{
   ~CAnnealing(void);
   CAnnealing(const QString& imgpath, int final_imgsz, int template_size);
 //public接口
-  void SetReconPath(const QString &imgpath,
-                    const QString &dstimgpath);  //设置三维重建的src,dst路径
-  void SetFusePath(const QString &highpath, const QString &lowpath,
-                   const QString &fusepath);     //设置二维融合三维的src,dst路径
+  void SetSavePath(const QString &dstimgpath);  //设置保存路径
+
   void SetReconOP() { m_isReconstruct = true; }
   void SetFuseOP() { m_isReconstruct = false; }
-  //三维重建 
-  bool Reconstruct();
+  //加载序列图进去
+  bool Load3DImg(const QFileInfoList& filelist);
+
+  //工作函数
+  bool Work() { return (m_isReconstruct ? Reconstruct() : TwoFuseThree()); }
 
   //设置退出标志(设为true,则重建函数立即停止)
   void ShutDown() { m_ShutDown = true; }
@@ -39,8 +40,14 @@ class CAnnealing :public QObject{
 signals:
   void CurrProgress(int);  //用来发送当前进度
 
-//以下都是私有的工具函数
  private:
+
+  //三维重建 
+  bool Reconstruct();
+  //二维融合三维
+  bool TwoFuseThree();
+
+//以下都是私有的工具函数
   void Set_inital_data_Recons();
   void Set_inital_data_2fuse3();
   void Transfer_grid_size(int);
@@ -80,7 +87,6 @@ signals:
 
  private:
   void LoadInitialImg(const QString& imgpath);
-  bool Load3DImg(const QFileInfoList& filelist);
 
  private:
   // unsigned char* image;  //wrh 这个发现没用
@@ -125,12 +131,8 @@ signals:
   int m_class_black_point_number;
 
   //from wrh
-  QString m_single_srcimg_path;   //单张训练图像路径
-  QString m_dstimg_path;          //三维重建结果路径
+  QString m_dstimg_path;          //结果路径
 
-  QString m_series_highimg_path;   //高分辨率小孔序列图路径
-  QString m_series_lowimg_path;   //低分辨率大孔序列图路径
-  QString m_fuseimg_path;         //融合结果路径
 
   bool m_isReconstruct;             //标志是三维重建还是二维融合三维
 

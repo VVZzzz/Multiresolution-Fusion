@@ -75,6 +75,12 @@
     <ClCompile Include="WorkThread.cpp">
       <Filter>Source Files\Reconstruct</Filter>
     </ClCompile>
+    <ClCompile Include="TwoFuseDlg.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="PoreSet.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -101,6 +107,9 @@
     <QtMoc Include="Annealing.h">
       <Filter>Header Files\Reconstruct</Filter>
     </QtMoc>
+    <QtMoc Include="TwoFuseDlg.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
   </ItemGroup>
   <ItemGroup>
     <QtUic Include="MainWindow.ui">
@@ -113,6 +122,9 @@
       <Filter>Form Files</Filter>
     </QtUic>
     <QtUic Include="singleReconDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="TwoFuseDialog.ui">
       <Filter>Form Files</Filter>
     </QtUic>
   </ItemGroup>
@@ -145,6 +157,12 @@
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_singleReconDialog.h">
       <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_TwoFuseDialog.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PoreSet.h">
+      <Filter>Header Files\Reconstruct</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
