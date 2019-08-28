@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <stack>
 using namespace std;
 //三维融合三维头文件
 class PoreSet {

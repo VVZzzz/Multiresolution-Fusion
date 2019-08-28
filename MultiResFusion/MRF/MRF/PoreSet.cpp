@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QImage>
 #include <stack>
+#include <QDebug>
 
 PoreSet::PoreSet(int porenum, int templesz)
     : m_PoreNum(porenum), m_templesz(templesz) {
@@ -86,9 +87,9 @@ bool PoreSet::LoadBigPoreSet(const QString& filepath) {
   ClearBigPorelabel();
   bPore_label = new int**[m_biglayers];  
   for (int i = 0; i < m_biglayers; i++) {
-    m_bigimg[i] = new int*[m_bigheight];
+    bPore_label[i] = new int*[m_bigheight];
     for (int j = 0; j < m_bigheight; j++) {
-      m_bigimg[i][j] = new int[m_bigwidth]();
+      bPore_label[i][j] = new int[m_bigwidth]();
     }
   }
 	for (int z=0;z<m_biglayers;z++)
@@ -169,9 +170,6 @@ bool PoreSet::Reconstruct(const QString& savepath) {
 		{
 			flag01=1;          
 
-			clock_t s,f;
-			s=clock();
-
 			//////////////////选取初始模式：首先随机确定子模式集，再在对应子模式集中随机选取初始模式块///////////////////////////////////
 			srand((unsigned)time(NULL));
 			int st_totalnum=m_st_pnum.size();
@@ -227,7 +225,8 @@ bool PoreSet::Reconstruct(const QString& savepath) {
 						++m;
 						//180312修正
 						int t=0;
-						if (ori_curModel[m]!=0)
+						//if (ori_curModel[m]!=0)
+						if (ori_curModel[m])
 						{
 							t=255;
 							m_bigimg[z][y][x]=t;
@@ -367,14 +366,14 @@ bool PoreSet::Reconstruct(const QString& savepath) {
 			}
 
 			new_poreNum++; 
-			f=clock();
-			double t=(f-s)/CLOCKS_PER_SEC/60.0;
 
 			//cout<<"已重建第"<<new_poreNum<<"个孔，该孔的体积为"<<new_poresize<<"，用时(min)"<<t<<endl;
 
 
 			//////////////////////////////////不断更新&保存重建过程中的三维序列图////////////////////////////////////////
+      //qDebug() << "更新三维结构文件夹";
       
+      /*
       QDir qdir(savepath);
       if (!qdir.exists("reconstruct")) qdir.mkdir("reconstruct");
       QImage img(m_bigwidth, m_bigheight, QImage::Format_Grayscale8);
@@ -394,15 +393,11 @@ bool PoreSet::Reconstruct(const QString& savepath) {
         respath.append("/reconstruct/").append(name);
         img.save(respath, nullptr, 100);
       }
-
-
+      */
 		}
 		else      //12-15：采用迭代重建的方法！只有当某一方向与其他孔连接才停止该孔的重建，否则将坐标偏移量置为0，从头开始重建
 		{
 			flag01=0;         //12-26：对于后百分之50的孔点，其放置位置必须可与任意孔靠近！ 
-
-			clock_t s,f;
-			s=clock();
 
 			//18-1-1修改：初始孔块随机确定子模式集，再在对应子模式集中随机选取初始模式块
 			srand((unsigned)time(NULL));
@@ -600,6 +595,7 @@ bool PoreSet::Reconstruct(const QString& savepath) {
 
 
 			//////////////////////////////////不断更新&保存重建过程中的三维序列图////////////////////////////////////////
+      /*
       QDir qdir(savepath);
       if (!qdir.exists("reconstruct")) qdir.mkdir("reconstruct");
       QImage img(m_bigwidth, m_bigheight, QImage::Format_Grayscale8);
@@ -619,10 +615,33 @@ bool PoreSet::Reconstruct(const QString& savepath) {
         respath.append("/reconstruct/").append(name);
         img.save(respath, nullptr, 100);
       }
+      */
 
 		}
 
+    qDebug() << "chg_pNum: " << chg_pNum
+                         << " tar_pNum: " << tar_pNum;
 	}
+  
+  QDir qdir(savepath);
+  if (!qdir.exists("reconstruct")) qdir.mkdir("reconstruct");
+  QImage img(m_bigwidth, m_bigheight, QImage::Format_Grayscale8);
+  int i = 0, j = 0, k = 0, q = 0, white_point = 0;
+  for (q = 0; q != m_biglayers; q++) {
+    for (i = 0; i != m_bigheight; ++i) {
+      uchar* lpix = img.scanLine(i);
+      for (j = 0; j != m_bigwidth; ++j) {
+        k = m_bigimg[q][i][j];
+        *(lpix + j * 1) = k ;
+      }
+    }
+    char name[100];
+    sprintf(name, "%d.bmp", q);
+    //最终图片名格式为数字编号，例“1.bmp”
+    QString respath = savepath;
+    respath.append("/reconstruct/").append(name);
+    img.save(respath, nullptr, 100);
+  }
 	//AfxMessageBox(_T("重建完成！"));
   ClearBigPorelabel();
   ClearBigImg();
@@ -734,7 +753,6 @@ bool PoreSet::Built3DImage01sPoreSet(const QString &filepath) {
 						key_num+=to_string(long long(ntrans));
 					}
 
-          ClearSmallImg();  //释放Img3D
 					//要是模块中孔点数不为0且不全是孔点，则保存该模块->(17-10-29修改：保存全是孔点的模块)
 					if (p_num!=0)
 					{
@@ -771,6 +789,7 @@ bool PoreSet::Built3DImage01sPoreSet(const QString &filepath) {
 			}
 		}
 
+    ClearSmallImg();  //释放Img3D
 		//set<int>::iterator it;
 		//it=m_st_pnum.end();
 		//--it;
@@ -1495,6 +1514,7 @@ bool PoreSet::IsReconstSuccess(const QString&savepath , double _chgnum, double t
   if (_chgnum < (trag_num + dev)) return false;
   if (savepath.isEmpty()) return false;
 
+  /*
   QDir qdir(savepath);
   if (!qdir.exists("reconstruct")) qdir.mkdir("reconstruct");
   QImage img(_bCols, _bRows, QImage::Format_Grayscale8);
@@ -1514,6 +1534,7 @@ bool PoreSet::IsReconstSuccess(const QString&savepath , double _chgnum, double t
     respath.append("/reconstruct/").append(name);
     img.save(respath, nullptr, 100);
   }
+  */
   return true;
 }
 
@@ -1728,7 +1749,7 @@ bool PoreSet::IsfindBestModel(vector<bool>& bs_newmodel, int& cur_modelpnum,
 			//判断模式集中模式与新产生的模式相同位置像素点相位不同点的个数
       
       for (int i = 0; i < cur_model.size(); i++) {
-        if (cur_model[i] || bs_newmodel[i]) cur_diff++;
+        if (cur_model[i] ^ bs_newmodel[i]) cur_diff++;
       }
                         
 			if (n==1)

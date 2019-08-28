@@ -11,6 +11,7 @@
 #include "Annealing.h"
 #include "WorkThread.h"
 #include "TwoFuseDlg.h"
+#include "PoreSet.h"
 
 
 //程序主界面类
@@ -45,6 +46,9 @@ class MainWindow : public QMainWindow {
   void on_singleReFile_clicked();
   void on_twodim1_clicked();
   void on_threedim1_clicked();
+  void on_threedim2_clicked();
+  void on_threedim3_clicked();
+
   void on_cancleCurrOP_clicked();
   //点击List中项目对应的槽
   void listItem_clicked(QListWidgetItem *item);
@@ -72,7 +76,7 @@ class MainWindow : public QMainWindow {
   QToolButton *m_threedim1file;
   //三维融合三维
   QToolButton *m_threedim2file;
-  QToolButton *m_threedim_3;
+  QToolButton *m_threedim3file;
   //"融合操作"中按钮
   QToolButton *m_singleReconstructOp;
   QToolButton *m_twoFuseThreeOP;
@@ -99,11 +103,16 @@ class MainWindow : public QMainWindow {
   //三维重建,二维融合三维核心类
   CAnnealing *m_pCAnneal;
 
+  //三维融合三维核心类
+  PoreSet *m_pPoreset;
+
   //工作线程
   WorkThread *m_pWorkthread;
 
   //读入图的类型
   OPType m_imgtype;
+
+  
   
   
 

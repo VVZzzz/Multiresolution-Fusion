@@ -61,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
   ui->ribbonTabWidget->addButton(TR("打开文件"), TR("三维融合三维"),
                                  m_threedim2file);
   ui->ribbonTabWidget->addButton(TR("打开文件"), TR("三维融合三维"),
-                                 m_threedim_3);
+                                 m_threedim3file);
   ui->ribbonTabWidget->addButton(TR("融合操作"), TR("融合操作"),
                                  m_singleReconstructOp);
   ui->ribbonTabWidget->addButton(TR("融合操作"), TR("融合操作"),
@@ -74,6 +74,8 @@ MainWindow::MainWindow(QWidget *parent)
 
   
   m_pCAnneal = nullptr;
+  m_pPoreset = nullptr;
+
   //为自定义对话框分配空间
   m_singleReconDlg = new SingleReconDialog(this);
   m_twoFuseDlg = new TwoFuseDlg(this);
@@ -132,12 +134,12 @@ void MainWindow::initToolButtons() {
   m_threedim2file->setIcon(QIcon("./Resources/icons/add_folder_2.svg"));
   m_threedim2file->setEnabled(true);
 
-  m_threedim_3 = new QToolButton(this);
-  m_threedim_3->setObjectName("threedim_3");
-  m_threedim_3->setText(TR("打开低分辨大孔序列图"));
-  m_threedim_3->setToolTip(TR("打开低分辨率大孔的序列图"));
-  m_threedim_3->setIcon(QIcon("./Resources/icons/add_folder_2.svg"));
-  m_threedim_3->setEnabled(true);
+  m_threedim3file = new QToolButton(this);
+  m_threedim3file->setObjectName("threedim_3");
+  m_threedim3file->setText(TR("打开低分辨大孔序列图"));
+  m_threedim3file->setToolTip(TR("打开低分辨率大孔的序列图"));
+  m_threedim3file->setIcon(QIcon("./Resources/icons/add_folder_2.svg"));
+  m_threedim3file->setEnabled(true);
 
   //在"融合操作"下添加按钮
   m_singleReconstructOp = new QToolButton(this);
@@ -204,7 +206,7 @@ void MainWindow::disableFileButtons() {
   m_twodim1file->setEnabled(false);
   m_threedim1file->setEnabled(false);
   m_threedim2file->setEnabled(false);
-  m_threedim_3->setEnabled(false);
+  m_threedim3file->setEnabled(false);
 }
 
 void MainWindow::enableFileButtons() {
@@ -212,7 +214,7 @@ void MainWindow::enableFileButtons() {
   m_twodim1file->setEnabled(true);
   m_threedim1file->setEnabled(true);
   m_threedim2file->setEnabled(true);
-  m_threedim_3->setEnabled(true);
+  m_threedim3file->setEnabled(true);
 }
 
 void MainWindow::clearView() { 
@@ -353,6 +355,42 @@ void MainWindow::on_threedim1_clicked() {
   m_singleReconstructOp->setEnabled(false);
   m_twoFuseThreeOP->setEnabled(true);
   m_threeFuseThreeOP->setEnabled(false);
+  ui->label->setText(TR("操作完成!"));
+  ui->progressBar->setVisible(false);
+}
+
+void MainWindow::on_threedim2_clicked() {
+  //设置读入类型
+  m_imgtype = OPType::HIGH3SERIES;
+  //设置进度条
+  ui->label->setText(TR("打开图片"));
+  ui->progressBar->setVisible(true);
+
+  if (!openSeriesImg()) return;
+  //设置图标disable
+  disableFileButtons();
+  m_threedim2file->setEnabled(true);
+  m_singleReconstructOp->setEnabled(false);
+  m_twoFuseThreeOP->setEnabled(false);
+  m_threeFuseThreeOP->setEnabled(true);
+  ui->label->setText(TR("操作完成!"));
+  ui->progressBar->setVisible(false);
+}
+
+void MainWindow::on_threedim3_clicked() {
+  //设置读入类型
+  m_imgtype = OPType::LOW3SERIES;
+  //设置进度条
+  ui->label->setText(TR("打开图片"));
+  ui->progressBar->setVisible(true);
+
+  if (!openSeriesImg()) return;
+  //设置图标disable
+  disableFileButtons();
+  m_threedim3file->setEnabled(true);
+  m_singleReconstructOp->setEnabled(false);
+  m_twoFuseThreeOP->setEnabled(false);
+  m_threeFuseThreeOP->setEnabled(true);
   ui->label->setText(TR("操作完成!"));
   ui->progressBar->setVisible(false);
 }
@@ -517,6 +555,48 @@ void MainWindow::on_threeFuseOP_clicked() {
   m_singleReconstructOp->setDown(false);
   m_twoFuseThreeOP->setDown(false);
   m_threeFuseThreeOP->setDown(true);
+
+  m_pPoreset = new PoreSet(1, 3);
+  //step1: 先设置小孔
+  m_pPoreset->SetSmallSize(128, 128, 128);
+  m_pPoreset->SetBigSize(128, 128, 128);
+  m_pPoreset->SetExpectPorosity(28.00);
+
+  QString sfilepath;
+  sfilepath = QFileDialog::getOpenFileName(
+      this, tr("Open Small Image"), ".",
+      tr("Image Files (*.png *.jpg *.bmp *.jpeg)"));
+  if (sfilepath.isEmpty()) return ;
+
+  QString bfilepath;
+  bfilepath = QFileDialog::getOpenFileName(
+      this, tr("Open Big Image"), ".",
+      tr("Image Files (*.png *.jpg *.bmp *.jpeg)"));
+  if (bfilepath.isEmpty()) return ;
+
+  QString savepath;
+  savepath = QFileDialog::getExistingDirectory(this, TR("保存路径"),
+                                               QDir::currentPath());
+  if (savepath.isEmpty()) return ;
+
+  vector<QString> smallpathvec = {sfilepath};
+  if (!m_pPoreset->LoadSmallPoreSet(smallpathvec)) {
+    qDebug() << "Load SmallPoreSet error!";
+    return;
+  }
+    qDebug() << "Load SmallPoreSet success!";
+  if (!m_pPoreset->LoadBigPoreSet(bfilepath)) {
+    qDebug() << "Load BigPoreSet error!";
+    return;
+  }
+    qDebug() << "Load BigPoreSet success!";
+
+  if (!m_pPoreset->Reconstruct(savepath)) {
+    qDebug() << "Reconstruct error!";
+    return;
+  }
+  delete m_pPoreset;
+  
 }
 
 void MainWindow::on_workthread_finished() {
