@@ -1,4 +1,5 @@
 #include "MainWindow.h"
+#include <QThread>
 #include <QDebug>
 #include <QFileDialog>
 #include <QMessageBox>
@@ -6,10 +7,9 @@
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindowClass) {
-  
   initToolButtons();
 
-  ui->setupUi(this);    
+  ui->setupUi(this);
 
   //初始化进度条text
   ui->label->setText(TR("操作进度指示"));
@@ -21,10 +21,10 @@ MainWindow::MainWindow(QWidget *parent)
   m_singleReconstructOp->setEnabled(false);
   m_threeFuseThreeOP->setEnabled(false);
   m_twoFuseThreeOP->setEnabled(false);
-  
+
   //连接信号和槽
   connect(ui->listWidget, SIGNAL(itemClicked(QListWidgetItem *)), this,
-          SLOT(listItem_clicked(QListWidgetItem *))); 
+          SLOT(listItem_clicked(QListWidgetItem *)));
 
   //初始化状态栏
   m_sizeLabel = new QLabel(this);
@@ -51,17 +51,20 @@ MainWindow::MainWindow(QWidget *parent)
   ui->ribbonTabWidget->addTab(QIcon("./Resources/icons/information_1.svg"),
                               TR("帮助"));
 
-
   ui->ribbonTabWidget->addButton(TR("打开文件"), TR("单张重建"),
-                                m_singleResconstructFile);
+                                 m_singleResconstructFile);
   ui->ribbonTabWidget->addButton(TR("打开文件"), TR("二维融合三维"),
                                  m_twodim1file);
   ui->ribbonTabWidget->addButton(TR("打开文件"), TR("二维融合三维"),
                                  m_threedim1file);
+  /*
   ui->ribbonTabWidget->addButton(TR("打开文件"), TR("三维融合三维"),
                                  m_threedim2file);
+  */
+
   ui->ribbonTabWidget->addButton(TR("打开文件"), TR("三维融合三维"),
                                  m_threedim3file);
+
   ui->ribbonTabWidget->addButton(TR("融合操作"), TR("融合操作"),
                                  m_singleReconstructOp);
   ui->ribbonTabWidget->addButton(TR("融合操作"), TR("融合操作"),
@@ -72,31 +75,36 @@ MainWindow::MainWindow(QWidget *parent)
                                  m_cancleCurrOP);
   initListWidget();
 
-  
   m_pCAnneal = nullptr;
   m_pPoreset = nullptr;
 
   //为自定义对话框分配空间
   m_singleReconDlg = new SingleReconDialog(this);
   m_twoFuseDlg = new TwoFuseDlg(this);
+  m_pFuseWizard = new FuseWizard(this);
 
   //初始化线程对象
   m_pWorkthread = new WorkThread();
-  //连接工作线程对象信号和
+  //连接工作线程对象信号和槽
   connect(m_pWorkthread, &QThread::finished, this,
           &MainWindow::on_workthread_finished);
   connect(m_pWorkthread, &WorkThread::opCancle, this,
           &MainWindow::on_canlethread);
 }
 
-MainWindow::~MainWindow() { 
-  delete ui; 
+MainWindow::~MainWindow() {
+  delete ui;
   if (m_pCAnneal != nullptr) {
     delete m_pCAnneal;
-    if (m_pWorkthread) {
-      delete m_pWorkthread;
-      m_pWorkthread = nullptr;
-    }
+    m_pCAnneal = nullptr;
+  }
+  if (m_pPoreset) {
+    delete m_pPoreset;
+    m_pPoreset = nullptr;
+  }
+  if (m_pWorkthread) {
+    delete m_pWorkthread;
+    m_pWorkthread = nullptr;
   }
 }
 
@@ -107,7 +115,8 @@ void MainWindow::initToolButtons() {
   m_singleResconstructFile->setObjectName("singleReFile");
   m_singleResconstructFile->setText(TR("打开单张二维图片"));
   m_singleResconstructFile->setToolTip(TR("打开用来三维重建的单张图"));
-  m_singleResconstructFile->setIcon(QIcon("./Resources/icons/add_folder_2.svg"));
+  m_singleResconstructFile->setIcon(
+      QIcon("./Resources/icons/add_folder_2.svg"));
   m_singleResconstructFile->setEnabled(true);
 
   //二维融合三维
@@ -135,7 +144,7 @@ void MainWindow::initToolButtons() {
   m_threedim2file->setEnabled(true);
 
   m_threedim3file = new QToolButton(this);
-  m_threedim3file->setObjectName("threedim_3");
+  m_threedim3file->setObjectName("threedim3");
   m_threedim3file->setText(TR("打开低分辨大孔序列图"));
   m_threedim3file->setToolTip(TR("打开低分辨率大孔的序列图"));
   m_threedim3file->setIcon(QIcon("./Resources/icons/add_folder_2.svg"));
@@ -148,9 +157,6 @@ void MainWindow::initToolButtons() {
   m_singleReconstructOp->setToolTip(TR("由单张图进行三维重建"));
   m_singleReconstructOp->setIcon(QIcon("./Resources/icons/add_link_2.svg"));
   m_singleReconstructOp->setEnabled(true);
-  //设置这些按钮,有按下效果
-  //m_singleReconstructOp->setCheckable(true);
-  //m_singleReconstructOp->setAutoExclusive(true);
 
   m_twoFuseThreeOP = new QToolButton(this);
   m_twoFuseThreeOP->setObjectName("twoFuseOP");
@@ -158,9 +164,6 @@ void MainWindow::initToolButtons() {
   m_twoFuseThreeOP->setToolTip(TR("将二维重建融合进三维"));
   m_twoFuseThreeOP->setIcon(QIcon("./Resources/icons/add_link_2.svg"));
   m_twoFuseThreeOP->setEnabled(true);
-  //设置这些按钮,有按下效果
-  //m_twoFuseThreeOP->setCheckable(true);
-  //m_twoFuseThreeOP->setAutoExclusive(true);
 
   m_threeFuseThreeOP = new QToolButton(this);
   m_threeFuseThreeOP->setObjectName("threeFuseOP");
@@ -168,23 +171,19 @@ void MainWindow::initToolButtons() {
   m_threeFuseThreeOP->setToolTip(TR("将三维融合进三维"));
   m_threeFuseThreeOP->setIcon(QIcon("./Resources/icons/add_link_2.svg"));
   m_threeFuseThreeOP->setEnabled(true);
-  //设置这些按钮,有按下效果
-  //m_threeFuseThreeOP->setCheckable(true);
-  //m_threeFuseThreeOP->setAutoExclusive(true);
 
   //"工具"组按钮
   m_cancleCurrOP = new QToolButton(this);
   m_cancleCurrOP->setObjectName("cancleCurrOP");
-  //m_cancleCurrOP->setText(TR("取消当前操作"));
+  // m_cancleCurrOP->setText(TR("取消当前操作"));
   m_cancleCurrOP->setToolTip(TR("取消当前操作"));
   m_cancleCurrOP->setIcon(QIcon("./Resources/icons/cancel_1.svg"));
   m_cancleCurrOP->setEnabled(true);
-
 }
 
 void MainWindow::initListWidget() {
-  //ui->listWidget->setWindowTitle(TR("图片列表"));
-  //ui->listWidget->resize(300, 400);
+  // ui->listWidget->setWindowTitle(TR("图片列表"));
+  // ui->listWidget->resize(300, 400);
   //设置QListWidget的显示模式
   ui->listWidget->setViewMode(QListView::IconMode);
   //设置QListWidget中单元项的图片大小
@@ -198,7 +197,6 @@ void MainWindow::initListWidget() {
 
   ui->listWidget->addItem(TR("图片列表"));
   ui->listWidget->show();
-
 }
 
 void MainWindow::disableFileButtons() {
@@ -217,14 +215,14 @@ void MainWindow::enableFileButtons() {
   m_threedim3file->setEnabled(true);
 }
 
-void MainWindow::clearView() { 
-  m_graphScene->clear(); 
+void MainWindow::clearView() {
+  m_graphScene->clear();
   ui->graphicsView->resetTransform();
   m_sizeLabel->clear();
 }
 
-void MainWindow::clearListWidget() { 
-  ui->listWidget->clear(); 
+void MainWindow::clearListWidget() {
+  ui->listWidget->clear();
   ui->listWidget->addItem(TR("图片列表"));
 }
 
@@ -244,7 +242,7 @@ void MainWindow::addImage2List(const QString &filepath) {
   imageItem->setText(QFileInfo(filepath).fileName() + "-" + QString::number(i));
   imageItem->setTextAlignment(Qt::AlignHCenter);
   //不要下面这个设置语句了
-  //imageItem->setSizeHint(QSize(100, 100));
+  // imageItem->setSizeHint(QSize(100, 100));
   ui->listWidget->addItem(imageItem);
   //注意这个imageItem无需手动清除,listWidget中的clear方法会delete掉所有item.
 }
@@ -304,12 +302,12 @@ bool MainWindow::openSeriesImg() {
 
   int total = m_fileinfolist.size();
   int curr = 1;
-  for (auto itr = m_fileinfolist.begin(); 
-    itr != m_fileinfolist.end(); itr++,curr++) {
+  for (auto itr = m_fileinfolist.begin(); itr != m_fileinfolist.end();
+       itr++, curr++) {
     //将文件路径添加到m_filespath
     QString tempPath = itr->absoluteFilePath();
     m_filespath.push_back(tempPath);
-  //添加缩略图到"列表"区域
+    //添加缩略图到"列表"区域
     addImage2List(tempPath);
     ui->progressBar->setValue(curr * 100 / total);
   }
@@ -321,7 +319,7 @@ bool MainWindow::openSeriesImg() {
   return true;
 }
 
-void MainWindow::on_twodim1_clicked() { 
+void MainWindow::on_twodim1_clicked() {
   //设置读入类型
   m_imgtype = OPType::SINGLE;
   //设置进度条
@@ -395,12 +393,12 @@ void MainWindow::on_threedim3_clicked() {
   ui->progressBar->setVisible(false);
 }
 
-void MainWindow::on_cancleCurrOP_clicked() { 
+void MainWindow::on_cancleCurrOP_clicked() {
   if (m_pCAnneal) {
     //取消在工作线程中正在执行的操作
     m_pCAnneal->ShutDown();
   }
-  enableFileButtons(); 
+  enableFileButtons();
   m_singleReconstructOp->setEnabled(true);
   m_singleReconstructOp->setDown(false);
 
@@ -412,12 +410,12 @@ void MainWindow::on_cancleCurrOP_clicked() {
   m_imgtype = EMPTY;
 }
 
-void MainWindow::listItem_clicked(QListWidgetItem *item) { 
-  //qDebug() << ui->listWidget->row(item);
+void MainWindow::listItem_clicked(QListWidgetItem *item) {
+  // qDebug() << ui->listWidget->row(item);
   int index = ui->listWidget->row(item);
   if (index == 0) return;
   clearView();
-  addImage2View(m_filespath[index-1]);
+  addImage2View(m_filespath[index - 1]);
 }
 
 void MainWindow::on_singleReOP_clicked() {
@@ -432,10 +430,10 @@ void MainWindow::on_singleReOP_clicked() {
   m_twoFuseThreeOP->setDown(false);
   m_threeFuseThreeOP->setDown(false);
 
-  QString savepath ;
+  QString savepath;
   int finalsz;
   if (m_singleReconDlg->exec() == QDialog::Accepted) {
-  savepath = m_singleReconDlg->getPath();
+    savepath = m_singleReconDlg->getPath();
     finalsz = m_singleReconDlg->getSize();
   } else {
     QMessageBox msgbox;
@@ -456,10 +454,10 @@ void MainWindow::on_singleReOP_clicked() {
   m_pCAnneal->SetReconOP();
   m_pWorkthread->setAnnealPtr(m_pCAnneal);
   m_pWorkthread->start();
-  //m_pCAnneal->Reconstruct();
+  // m_pCAnneal->Reconstruct();
   //使用完就delete掉
-  //delete m_pCAnneal;
-  //m_pCAnneal = nullptr;
+  // delete m_pCAnneal;
+  // m_pCAnneal = nullptr;
   //设置进度条
   ui->label->setText(TR("重建操作:"));
   ui->progressBar->reset();
@@ -483,11 +481,11 @@ void MainWindow::on_twoFuseOP_clicked() {
   QFileInfoList fileinfolist;
   int finalsz;
   if (m_pCAnneal) delete m_pCAnneal;
-  if (m_imgtype == OPType::SINGLE) 
+  if (m_imgtype == OPType::SINGLE)
     m_twoFuseDlg->setType(SINGLE);
-   else if(m_imgtype == OPType::LOW2SERIES) 
+  else if (m_imgtype == OPType::LOW2SERIES)
     m_twoFuseDlg->setType(LOW2SERIES);
-  
+
   if (m_twoFuseDlg->exec() == QDialog::Accepted) {
     imgpath = m_twoFuseDlg->getImgPath();
     savepath = m_twoFuseDlg->getSavePath();
@@ -511,8 +509,8 @@ void MainWindow::on_twoFuseOP_clicked() {
       return;
     }
     m_pCAnneal = new CAnnealing(m_filespath[0], finalsz, 3);
-    //m_pCAnneal->Load3DImg(fileinfolist);
-  } 
+    // m_pCAnneal->Load3DImg(fileinfolist);
+  }
   //已打开序列图
   else if (m_imgtype == OPType::LOW2SERIES) {
     finalsz = m_pixmap.width();
@@ -541,7 +539,6 @@ void MainWindow::on_twoFuseOP_clicked() {
   ui->label->setText(TR("融合操作:"));
   ui->progressBar->reset();
   ui->progressBar->setVisible(true);
-
 }
 
 void MainWindow::on_threeFuseOP_clicked() {
@@ -556,6 +553,7 @@ void MainWindow::on_threeFuseOP_clicked() {
   m_twoFuseThreeOP->setDown(false);
   m_threeFuseThreeOP->setDown(true);
 
+  /*
   m_pPoreset = new PoreSet(1, 3);
   //step1: 先设置小孔
   m_pPoreset->SetSmallSize(128, 128, 128);
@@ -596,7 +594,22 @@ void MainWindow::on_threeFuseOP_clicked() {
     return;
   }
   delete m_pPoreset;
-  
+  */
+  m_pPoreset = new PoreSet(1, 3);
+
+  //连接向导页信号
+  connect(m_pPoreset, &PoreSet::LoadBigPorePro, this->m_pFuseWizard->porepage,
+          &PorePage::SetProgress);
+
+  // step1: 先设置小孔
+  m_pPoreset->SetSmallSize(128, 128, 128);
+  m_pPoreset->SetBigSize(128, 128, 128);
+  // m_pPoreset->SetExpectPorosity(28.00);
+  m_pFuseWizard->show();
+  m_pPoreset->LoadBigPoreSet(m_filespath[0]);
+
+  delete m_pPoreset;
+  m_pPoreset = nullptr;
 }
 
 void MainWindow::on_workthread_finished() {
@@ -622,10 +635,10 @@ void MainWindow::on_workthread_finished() {
 
 void MainWindow::on_progress(int val) { ui->progressBar->setValue(val); }
 
-void MainWindow::on_canlethread() { 
+void MainWindow::on_canlethread() {
   ui->progressBar->setVisible(false);
   ui->label->setText(TR("操作取消!"));
-  QMessageBox msgBox; 
+  QMessageBox msgBox;
   msgBox.setText(TR("操作已取消"));
   msgBox.exec();
 }
@@ -635,7 +648,7 @@ void MainWindow::on_singleReFile_clicked() {
   m_imgtype = OPType::SINGLE;
   //设置进度条
   ui->label->setText(TR("打开图片"));
-    if (!openSingleImg()) return;
+  if (!openSingleImg()) return;
   ui->progressBar->setVisible(true);
   ui->progressBar->setValue(100);
   //设置图标disable

@@ -6,7 +6,7 @@
 #include <QDebug>
 
 PoreSet::PoreSet(int porenum, int templesz)
-    : m_PoreNum(porenum), m_templesz(templesz) {
+    : m_PoreNum(porenum), m_templesz(templesz),QObject() {
   m_smallimg = nullptr;
   m_bigimg = nullptr;
   bPore_label = nullptr;
@@ -63,9 +63,11 @@ bool PoreSet::LoadBigPoreSet(const QString& filepath) {
     fileinfolist = qdir.entryInfoList();
     if (fileinfolist.size() != m_biglayers) return false;
 
+    emit LoadBigPorePro(0, 0);
     QImage img;
     int index = 0;
     for (auto itr = fileinfolist.begin(); itr != fileinfolist.end(); itr++,index++) {
+      emit LoadBigPorePro(index * 50 / m_biglayers, 0);
       img.load(itr->absoluteFilePath());
       QImage grayimg = img.convertToFormat(QImage::Format_Grayscale8);
       for (int i = 0; i < m_bigheight; i++) {
@@ -76,6 +78,7 @@ bool PoreSet::LoadBigPoreSet(const QString& filepath) {
         }
       }
     }
+    emit LoadBigPorePro(50, 0);
 
 	double b_totalNum=m_biglayers*m_bigheight*m_bigwidth;   //三维大孔结构总像素点个数
 	b_porePnum=0;    //大孔三维结构原始孔点数
@@ -94,6 +97,7 @@ bool PoreSet::LoadBigPoreSet(const QString& filepath) {
   }
 	for (int z=0;z<m_biglayers;z++)
 	{
+    emit LoadBigPorePro(49 + z * 50 / m_biglayers, 0);
 		for (int y=0;y<m_bigheight;y++)
 		{
 			for (int x=0;x<m_bigwidth;x++)
@@ -109,11 +113,8 @@ bool PoreSet::LoadBigPoreSet(const QString& filepath) {
 		}
 	}
 	//cout<<"大孔三维结构孔隙标签初始化完成！用时"<<time2<<"(min)"<<endl;
-
-
 	//重建匹配思路：
 	//根据填充的小孔模式块，作为该重建小孔的硬数据，再通过平移模板，获取新的待重建模式，在模式集中进行搜索匹配来重建该小孔剩余的孔点
-	
 	////////////////////////////////获取重建前和期望重建后的孔隙度(孔点个数)//////////////////////////////////////////
 	//三维孔隙度(原始&期望值)
   /*
@@ -127,6 +128,7 @@ bool PoreSet::LoadBigPoreSet(const QString& filepath) {
 	cin>>tar_p;
   */
   initial_p = (100.0 * b_porePnum) / b_totalNum;
+  emit LoadBigPorePro(100, initial_p);
   return true;
 }
 

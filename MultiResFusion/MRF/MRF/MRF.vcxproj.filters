@@ -43,6 +43,12 @@
     <Filter Include="Header Files\util">
       <UniqueIdentifier>{6f44d64b-e272-4f52-a3c2-fd3931abdc70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Wizard">
+      <UniqueIdentifier>{8fd9673a-9fde-4152-b272-c3bc67f3d69b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Wizard">
+      <UniqueIdentifier>{c3ae9656-dd5b-4811-8bb6-1f0b49519e96}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -81,6 +87,9 @@
     <ClCompile Include="PoreSet.cpp">
       <Filter>Source Files\Reconstruct</Filter>
     </ClCompile>
+    <ClCompile Include="ThreeFuseWizard.cpp">
+      <Filter>Source Files\Wizard</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="MainWindow.h">
@@ -108,6 +117,12 @@
       <Filter>Header Files\Reconstruct</Filter>
     </QtMoc>
     <QtMoc Include="TwoFuseDlg.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
+    <QtMoc Include="ThreeFuseWizard.h">
+      <Filter>Header Files\Wizard</Filter>
+    </QtMoc>
+    <QtMoc Include="PoreSet.h">
       <Filter>Header Files\Reconstruct</Filter>
     </QtMoc>
   </ItemGroup>
@@ -160,9 +175,6 @@
     </ClInclude>
     <ClInclude Include="GeneratedFiles\ui_TwoFuseDialog.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PoreSet.h">
-      <Filter>Header Files\Reconstruct</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

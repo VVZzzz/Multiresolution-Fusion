@@ -12,6 +12,7 @@
 #include "WorkThread.h"
 #include "TwoFuseDlg.h"
 #include "PoreSet.h"
+#include "ThreeFuseWizard.h"
 
 
 //程序主界面类
@@ -99,6 +100,9 @@ class MainWindow : public QMainWindow {
   //自定义对话框类
   SingleReconDialog *m_singleReconDlg;  //三维重建对话框
   TwoFuseDlg *m_twoFuseDlg;
+
+  //三维融合向导页类
+  FuseWizard *m_pFuseWizard;
 
   //三维重建,二维融合三维核心类
   CAnnealing *m_pCAnneal;

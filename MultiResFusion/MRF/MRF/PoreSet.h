@@ -6,9 +6,11 @@
 #include <string>
 #include <vector>
 #include <stack>
+#include <QObject>
 using namespace std;
 //三维融合三维头文件
-class PoreSet {
+class PoreSet : public QObject{
+  Q_OBJECT
  public:
   PoreSet(int porenum = 1, int templesz = 3);
   ~PoreSet();
@@ -28,6 +30,8 @@ class PoreSet {
   //step4: 进行重建
   bool Reconstruct(const QString &savepath);
 
+signals:
+  void LoadBigPorePro(int, double);
 
  private:
 
