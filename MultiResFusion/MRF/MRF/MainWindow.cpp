@@ -90,6 +90,9 @@ MainWindow::MainWindow(QWidget *parent)
           &MainWindow::on_workthread_finished);
   connect(m_pWorkthread, &WorkThread::opCancle, this,
           &MainWindow::on_canlethread);
+
+  connect(m_pFuseWizard, &FuseWizard::SetParaFinish, this,
+          &MainWindow::on_startThreeFuse);
 }
 
 MainWindow::~MainWindow() {
@@ -553,63 +556,23 @@ void MainWindow::on_threeFuseOP_clicked() {
   m_twoFuseThreeOP->setDown(false);
   m_threeFuseThreeOP->setDown(true);
 
-  /*
-  m_pPoreset = new PoreSet(1, 3);
-  //step1: 先设置小孔
-  m_pPoreset->SetSmallSize(128, 128, 128);
-  m_pPoreset->SetBigSize(128, 128, 128);
-  m_pPoreset->SetExpectPorosity(28.00);
-
-  QString sfilepath;
-  sfilepath = QFileDialog::getOpenFileName(
-      this, tr("Open Small Image"), ".",
-      tr("Image Files (*.png *.jpg *.bmp *.jpeg)"));
-  if (sfilepath.isEmpty()) return ;
-
-  QString bfilepath;
-  bfilepath = QFileDialog::getOpenFileName(
-      this, tr("Open Big Image"), ".",
-      tr("Image Files (*.png *.jpg *.bmp *.jpeg)"));
-  if (bfilepath.isEmpty()) return ;
-
-  QString savepath;
-  savepath = QFileDialog::getExistingDirectory(this, TR("保存路径"),
-                                               QDir::currentPath());
-  if (savepath.isEmpty()) return ;
-
-  vector<QString> smallpathvec = {sfilepath};
-  if (!m_pPoreset->LoadSmallPoreSet(smallpathvec)) {
-    qDebug() << "Load SmallPoreSet error!";
-    return;
-  }
-    qDebug() << "Load SmallPoreSet success!";
-  if (!m_pPoreset->LoadBigPoreSet(bfilepath)) {
-    qDebug() << "Load BigPoreSet error!";
-    return;
-  }
-    qDebug() << "Load BigPoreSet success!";
-
-  if (!m_pPoreset->Reconstruct(savepath)) {
-    qDebug() << "Reconstruct error!";
-    return;
-  }
-  delete m_pPoreset;
-  */
   m_pPoreset = new PoreSet(1, 3);
 
   //连接向导页信号
   connect(m_pPoreset, &PoreSet::LoadBigPorePro, this->m_pFuseWizard->porepage,
           &PorePage::SetProgress);
+  //连接三维融合进度信号
+  connect(m_pPoreset, &PoreSet::SetProcessVal, this, &MainWindow::on_progress);
 
-  // step1: 先设置小孔
-  m_pPoreset->SetSmallSize(128, 128, 128);
-  m_pPoreset->SetBigSize(128, 128, 128);
-  // m_pPoreset->SetExpectPorosity(28.00);
+  //向导页设置参数
+  QImage img(m_filespath[0]);
+  m_pPoreset->SetBigSize(m_filespath.size(), img.height(), img.width());
   m_pFuseWizard->show();
   m_pPoreset->LoadBigPoreSet(m_filespath[0]);
 
-  delete m_pPoreset;
-  m_pPoreset = nullptr;
+  ui->label->setText(TR("三维融合操作:"));
+  ui->progressBar->reset();
+  ui->progressBar->setVisible(true);
 }
 
 void MainWindow::on_workthread_finished() {
@@ -618,6 +581,13 @@ void MainWindow::on_workthread_finished() {
     m_pCAnneal->disconnect();
     delete m_pCAnneal;
     m_pCAnneal = nullptr;
+  }
+
+  if (m_pPoreset) {
+    //解绑这个m_pPoreset对象的信号
+    m_pPoreset->disconnect();
+    delete m_pPoreset;
+    m_pPoreset = nullptr;
   }
   ui->label->setText(TR("操作完成!"));
   ui->progressBar->setValue(100);
@@ -641,6 +611,15 @@ void MainWindow::on_canlethread() {
   QMessageBox msgBox;
   msgBox.setText(TR("操作已取消"));
   msgBox.exec();
+}
+
+void MainWindow::on_startThreeFuse() {
+  //设置重建参数
+  if (m_pPoreset) {
+    Param para = m_pFuseWizard->getParam();
+    m_pWorkthread->setPoreSetPtr(m_pPoreset, para);
+    m_pWorkthread->start();
+  }
 }
 
 void MainWindow::on_singleReFile_clicked() {

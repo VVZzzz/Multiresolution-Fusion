@@ -16,26 +16,35 @@ class PoreSet : public QObject{
   ~PoreSet();
 
  public:
-  void SetSmallSize(int layers, int height, int width);
+  //void SetSmallSize(int layers, int height, int width);
+
+ 
+
+  //以下重建操作可以放在一个工作线程中进行
+  //step0: 设置融合的小孔三维体个数,存放路径
+  void SetNumSize(int porenum, int templesz) {
+    m_PoreNum = porenum;
+    m_templesz = templesz;
+  }
   void SetBigSize(int layers, int height, int width);
   void SetExpectPorosity(double p) { tar_p = p; }
-
-  //以下重建操作可以放在一个向导对话框中进行
-  //step0: 设置融合的小孔三维体个数,存放路径
-  //step1: 保存小孔
-  bool LoadSmallPoreSet(vector<QString> &filepath);
-  //step2: 保存大孔(得到原始孔隙度)
+  //step1: 保存大孔(得到原始孔隙度)
   bool LoadBigPoreSet(const QString& filepath);
+  //step2: 保存小孔
+  bool LoadSmallPoreSet(vector<QString> &filepath);
   //step3: 设置期望孔隙度(SetExpectPorosity)
   //step4: 进行重建
   bool Reconstruct(const QString &savepath);
 
 signals:
+  //加载大孔进度
   void LoadBigPorePro(int, double);
+  //重建加载进度
+  void SetProcessVal(int);
 
  private:
 
-  bool Built3DImage01sPoreSet(const QString& filepath);
+  bool Built3DImage01sPoreSet(const QString& filepath,int index,int total);
   void ClearSmallImg();
   void ClearBigImg();
   void ClearBigPorelabel();

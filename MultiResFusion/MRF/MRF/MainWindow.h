@@ -63,6 +63,8 @@ class MainWindow : public QMainWindow {
   void on_progress(int);
   //工作线程被取消操作
   void on_canlethread();
+  //三维融合三维参数设置完成,开始进行重建操作
+  void on_startThreeFuse();
 
  private:
   Ui::MainWindowClass *ui;

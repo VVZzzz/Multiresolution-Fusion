@@ -21,11 +21,13 @@ PoreSet::~PoreSet() {
   if (bPore_label) ClearBigPorelabel();
 }
 
+/*
 void PoreSet::SetSmallSize(int layers, int height, int width) {
-  m_smalllayers = layers;
+  //m_smalllayers = layers;
   m_smallheight = height;
   m_smallwidth = width;
 }
+*/
 
 void PoreSet::SetBigSize(int layers, int height, int width) {
   m_biglayers = layers;
@@ -34,8 +36,17 @@ void PoreSet::SetBigSize(int layers, int height, int width) {
 }
 
 bool PoreSet::LoadSmallPoreSet(vector<QString>& filepath) {
-  for (auto& str : filepath)
-    if (!Built3DImage01sPoreSet(str)) return false;
+  int i = 0, total = filepath.size();
+  for (auto& str : filepath) {
+    QImage img(str);
+    int h = img.height();
+    int w = img.width();
+    m_smallheight = h;
+    m_smallwidth = w;
+    if (!Built3DImage01sPoreSet(str,i,total)) return false;
+    i++;
+    emit SetProcessVal(30*i/total);
+  }
   return true;
 }
 
@@ -144,6 +155,7 @@ bool PoreSet::Reconstruct(const QString& savepath) {
 	int new_poreNum=0;        //统计重建孔的个数
 	while(chg_pNum<(tar_pNum-deviation))    //判断是否继续重建小孔，当最终图像孔隙点数小于指定最小孔隙点数，可继续重建满足条件的小孔
 	{   
+    emit SetProcessVal(30 + 69.0 * chg_pNum / (tar_pNum - deviation));
 
 
 		/////////////////////////////////孔重建及判断重建完成的思路/////////////////////////////////////////
@@ -647,6 +659,7 @@ bool PoreSet::Reconstruct(const QString& savepath) {
 	//AfxMessageBox(_T("重建完成！"));
   ClearBigPorelabel();
   ClearBigImg();
+  emit SetProcessVal(100);
 	return true;
 }
 
@@ -660,17 +673,11 @@ bool PoreSet::Reconstruct(const QString& savepath) {
 //模式的尺寸
 //10-19：用来保存建立的小孔三维图像
 //11-27新增变量：multimap<int,double> 其中关键字key为当前模式中孔点的个数，对应value为模式十进制值。
-bool PoreSet::Built3DImage01sPoreSet(const QString &filepath) {
+bool PoreSet::Built3DImage01sPoreSet(const QString &filepath,int index_pos,int total_pos) {
 
+  int seg = 30 / total_pos + 1;
   if (filepath.isEmpty()) return false;
   ClearSmallImg();
-  m_smallimg = new int**[m_smalllayers];
-  for (int i = 0; i < m_smalllayers; i++) {
-    m_smallimg[i] = new int*[m_smallheight];
-    for (int j = 0; j < m_smallheight; j++) {
-      m_smallimg[i][j] = new int[m_smallwidth]();
-    }
-  }
 		//18-2-22：将之前几个map整合为一个multimap<pnum,pair<prob,model>>;
 		//并找到将key由十进制转换为它之前对应的二进制串！
 		//multimap<int,pair<string,pair<int,bitset<bs_bits>>>> m_pnum;   //由于在模式匹配的过程中，对于关键字的需求不高，关键字只是为了找模式出现的频率，所以最终模式集map中可以不存储关键字！   
@@ -686,7 +693,17 @@ bool PoreSet::Built3DImage01sPoreSet(const QString &filepath) {
             << "*.jpeg";
     qdir.setNameFilters(filters);
     fileinfolist = qdir.entryInfoList();
-    if (fileinfolist.size() != m_smalllayers) return false;
+    m_smalllayers = fileinfolist.size();
+
+    m_smallimg = new int**[m_smalllayers];
+    for (int i = 0; i < m_smalllayers; i++) {
+      m_smallimg[i] = new int*[m_smallheight];
+      for (int j = 0; j < m_smallheight; j++) {
+        m_smallimg[i][j] = new int[m_smallwidth]();
+      }
+    }
+
+    emit SetProcessVal(30 * index_pos / total_pos + seg / 3);
 
     QImage img;
     int index = 0;
@@ -701,6 +718,8 @@ bool PoreSet::Built3DImage01sPoreSet(const QString &filepath) {
         }
       }
     }
+
+    emit SetProcessVal(30 * index_pos / total_pos + seg*2 / 3);
 
 		//存储小孔模式块！
 		clock_t start2,finish2;
@@ -792,6 +811,7 @@ bool PoreSet::Built3DImage01sPoreSet(const QString &filepath) {
 		}
 
     ClearSmallImg();  //释放Img3D
+    emit SetProcessVal(30 * index_pos / total_pos + seg);
 		//set<int>::iterator it;
 		//it=m_st_pnum.end();
 		//--it;
