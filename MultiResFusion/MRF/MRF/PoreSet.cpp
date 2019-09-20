@@ -13,6 +13,7 @@ PoreSet::PoreSet(int porenum, int templesz)
   b_porePnum = 0;
   tar_p = 0;
   initial_p = 0;
+  m_shutdown = false;
 }
 
 PoreSet::~PoreSet() {
@@ -156,6 +157,7 @@ bool PoreSet::Reconstruct(const QString& savepath) {
 	while(chg_pNum<(tar_pNum-deviation))    //判断是否继续重建小孔，当最终图像孔隙点数小于指定最小孔隙点数，可继续重建满足条件的小孔
 	{   
     emit SetProcessVal(30 + 69.0 * chg_pNum / (tar_pNum - deviation));
+    if (m_shutdown) return false;
 
 
 		/////////////////////////////////孔重建及判断重建完成的思路/////////////////////////////////////////
@@ -708,6 +710,7 @@ bool PoreSet::Built3DImage01sPoreSet(const QString &filepath,int index_pos,int t
     QImage img;
     int index = 0;
     for (auto itr = fileinfolist.begin(); itr != fileinfolist.end(); itr++,index++) {
+      if (m_shutdown) return false;
       img.load(itr->absoluteFilePath());
       QImage grayimg = img.convertToFormat(QImage::Format_Grayscale8);
       for (int i = 0; i < m_smallheight; i++) {
@@ -736,6 +739,10 @@ bool PoreSet::Built3DImage01sPoreSet(const QString &filepath,int index_pos,int t
 			{
 				for (int x=0;x<=m_smallwidth-m_templesz;x++)
 				{
+
+          //取消标志
+          if (m_shutdown) return false;
+
 					int n=-1;       //vector下标，模块左上角点为第一个数(二进制最高位)，右下角点为最后一个数(二进制最低位)
 					int p_num=0;   //模块中孔点个数
 					string key_num; //180123：将模式用01表示，并直接转化为string作为关键字

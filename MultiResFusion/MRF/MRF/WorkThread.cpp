@@ -27,8 +27,14 @@ void WorkThread::run() {
   } else if(pPoreSet){
     pPoreSet->SetNumSize(para.smallcorenum, para.poresetSize);
     pPoreSet->SetExpectPorosity(para.expectPoresity);
-    pPoreSet->LoadSmallPoreSet(para.smallPathVec);
-    pPoreSet->Reconstruct(para.savepath);
+    if (!pPoreSet->LoadSmallPoreSet(para.smallPathVec)) {
+      emit opCancle();
+      return;
+    }
+    if (!pPoreSet->Reconstruct(para.savepath)) {
+      emit opCancle();
+      return;
+    }
   }
 }
 

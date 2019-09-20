@@ -81,7 +81,8 @@ MainWindow::MainWindow(QWidget *parent)
   //为自定义对话框分配空间
   m_singleReconDlg = new SingleReconDialog(this);
   m_twoFuseDlg = new TwoFuseDlg(this);
-  m_pFuseWizard = new FuseWizard(this);
+  //m_pFuseWizard = new FuseWizard(this);
+  m_pFuseWizard = nullptr;
 
   //初始化线程对象
   m_pWorkthread = new WorkThread();
@@ -91,8 +92,8 @@ MainWindow::MainWindow(QWidget *parent)
   connect(m_pWorkthread, &WorkThread::opCancle, this,
           &MainWindow::on_canlethread);
 
-  connect(m_pFuseWizard, &FuseWizard::SetParaFinish, this,
-          &MainWindow::on_startThreeFuse);
+  //connect(m_pFuseWizard, &FuseWizard::SetParaFinish, this,
+   //       &MainWindow::on_startThreeFuse);
 }
 
 MainWindow::~MainWindow() {
@@ -401,6 +402,9 @@ void MainWindow::on_cancleCurrOP_clicked() {
     //取消在工作线程中正在执行的操作
     m_pCAnneal->ShutDown();
   }
+  if (m_pPoreset) {
+    m_pPoreset->ShutDown();
+  }
   enableFileButtons();
   m_singleReconstructOp->setEnabled(true);
   m_singleReconstructOp->setDown(false);
@@ -557,8 +561,11 @@ void MainWindow::on_threeFuseOP_clicked() {
   m_threeFuseThreeOP->setDown(true);
 
   m_pPoreset = new PoreSet(1, 3);
+  m_pFuseWizard = new FuseWizard(this);
 
   //连接向导页信号
+  connect(m_pFuseWizard, &FuseWizard::SetParaFinish, this,
+          &MainWindow::on_startThreeFuse);
   connect(m_pPoreset, &PoreSet::LoadBigPorePro, this->m_pFuseWizard->porepage,
           &PorePage::SetProgress);
   //连接三维融合进度信号
@@ -589,6 +596,13 @@ void MainWindow::on_workthread_finished() {
     delete m_pPoreset;
     m_pPoreset = nullptr;
   }
+
+  if (m_pFuseWizard) {
+    //解绑这个m_pFuseWizard对象的信号
+    m_pFuseWizard->disconnect();
+    delete m_pFuseWizard;
+    m_pFuseWizard = nullptr;
+  }
   ui->label->setText(TR("操作完成!"));
   ui->progressBar->setValue(100);
   ui->progressBar->setVisible(false);
@@ -615,7 +629,7 @@ void MainWindow::on_canlethread() {
 
 void MainWindow::on_startThreeFuse() {
   //设置重建参数
-  if (m_pPoreset) {
+  if (m_pPoreset!=nullptr && m_pFuseWizard!=nullptr) {
     Param para = m_pFuseWizard->getParam();
     m_pWorkthread->setPoreSetPtr(m_pPoreset, para);
     m_pWorkthread->start();

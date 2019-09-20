@@ -1,5 +1,5 @@
 #include "Annealing.h"
-#include <atlstr.h>
+//#include <atlstr.h>
 #include <stdio.h>
 #include <QDir>
 #include <QMessageBox>

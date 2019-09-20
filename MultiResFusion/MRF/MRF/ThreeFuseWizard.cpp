@@ -155,6 +155,7 @@ SetSizePage::SetSizePage(QWidget *parent /* = 0 */) {
   label3->setWordWrap(true);
   lineedit2 = new QLineEdit(this);
   btn = new QToolButton(this);
+  btn->setText(tr("..."));
 
   QGridLayout *glayout = new QGridLayout(this);
   glayout->addWidget(label, 0, 0,1,3);

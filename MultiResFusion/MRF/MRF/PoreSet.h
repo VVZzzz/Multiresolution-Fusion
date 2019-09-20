@@ -36,6 +36,9 @@ class PoreSet : public QObject{
   //step4: 进行重建
   bool Reconstruct(const QString &savepath);
 
+  //取消当前工作线程
+  void ShutDown() { m_shutdown = true; }
+
 signals:
   //加载大孔进度
   void LoadBigPorePro(int, double);
@@ -87,6 +90,8 @@ signals:
   int m_templesz;  //模式集中模块尺寸
   set<int> m_st_pnum;
   set<string> m_strkey;
+
+  bool m_shutdown;
 
   //由于bitset<N>中N必须是字面值常量,故我们这里使用vector<bool>替代.
   // vector<bool>不简简单单是vec容器
