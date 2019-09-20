@@ -1,0 +1,218 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Form Files">
+      <UniqueIdentifier>{99349809-55BA-4b9d-BF79-8FDBB0286EB3}</UniqueIdentifier>
+      <Extensions>ui</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{D9D6E242-F8AF-46E4-B9FD-80ECBC20BA3E}</UniqueIdentifier>
+      <Extensions>qrc;*</Extensions>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Generated Files">
+      <UniqueIdentifier>{71ED8ED8-ACB9-4CE9-BBE1-E00B30144E11}</UniqueIdentifier>
+      <Extensions>moc;h;cpp</Extensions>
+      <SourceControlFiles>False</SourceControlFiles>
+    </Filter>
+    <Filter Include="Header Files\Ribbon">
+      <UniqueIdentifier>{75d296c5-57a5-4814-8b8f-8a13d7e190c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Ribbon">
+      <UniqueIdentifier>{567fba8a-6ef1-457c-83ff-f7d7177a94ca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Reconstruct">
+      <UniqueIdentifier>{5a1384ff-a255-4eaf-873e-a5371efe71db}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Reconstruct">
+      <UniqueIdentifier>{6e215820-5c24-4179-872d-e9531795b13e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\util">
+      <UniqueIdentifier>{6f44d64b-e272-4f52-a3c2-fd3931abdc70}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Wizard">
+      <UniqueIdentifier>{8fd9673a-9fde-4152-b272-c3bc67f3d69b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Wizard">
+      <UniqueIdentifier>{c3ae9656-dd5b-4811-8bb6-1f0b49519e96}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MainWindow.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ribbon.cpp">
+      <Filter>Source Files\Ribbon</Filter>
+    </ClCompile>
+    <ClCompile Include="ribbonbuttongroup.cpp">
+      <Filter>Source Files\Ribbon</Filter>
+    </ClCompile>
+    <ClCompile Include="ribbontabcontent.cpp">
+      <Filter>Source Files\Ribbon</Filter>
+    </ClCompile>
+    <ClCompile Include="MyGraphicsView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Annealing.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="func.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="singleReconDlg.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="WorkThread.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="TwoFuseDlg.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="PoreSet.cpp">
+      <Filter>Source Files\Reconstruct</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreeFuseWizard.cpp">
+      <Filter>Source Files\Wizard</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="MainWindow.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="ribbon.h">
+      <Filter>Header Files\Ribbon</Filter>
+    </QtMoc>
+    <QtMoc Include="ribbonbuttongroup.h">
+      <Filter>Header Files\Ribbon</Filter>
+    </QtMoc>
+    <QtMoc Include="ribbontabcontent.h">
+      <Filter>Header Files\Ribbon</Filter>
+    </QtMoc>
+    <QtMoc Include="MyGraphicsView.h">
+      <Filter>Header Files</Filter>
+    </QtMoc>
+    <QtMoc Include="singleReconDlg.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
+    <QtMoc Include="WorkThread.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
+    <QtMoc Include="Annealing.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
+    <QtMoc Include="TwoFuseDlg.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
+    <QtMoc Include="ThreeFuseWizard.h">
+      <Filter>Header Files\Wizard</Filter>
+    </QtMoc>
+    <QtMoc Include="PoreSet.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="MainWindow.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ribbontabcontent.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="ribbonbuttongroup.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="singleReconDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+    <QtUic Include="TwoFuseDialog.ui">
+      <Filter>Form Files</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="MainWindow.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tools.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ribbonbuttongroup.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_ribbontabcontent.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pic.h">
+      <Filter>Header Files\util</Filter>
+    </ClInclude>
+    <ClInclude Include="func.h">
+      <Filter>Header Files\Reconstruct</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_singleReconDialog.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GeneratedFiles\ui_TwoFuseDialog.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="MRF.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\icons\add_database_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\add_folder_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\add_link_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\briefcase_1.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\create_new_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\engineering_1.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\file_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\information_1.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\live_folder_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\monitor_1.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Resources\icons\save_2.svg">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>
